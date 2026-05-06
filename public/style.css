@@ -1,0 +1,171 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f3f6fa;
+    color: #1f2937;
+}
+
+.app {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 260px;
+    background: #111827;
+    color: white;
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+.sidebar h2 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.sidebar p {
+    color: #cbd5e1;
+    font-size: 14px;
+    margin-bottom: 25px;
+}
+
+.nav {
+    width: 100%;
+    display: block;
+    background: transparent;
+    color: #e5e7eb;
+    border: 0;
+    text-align: left;
+    padding: 12px;
+    margin-bottom: 6px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.nav:hover,
+.nav.active {
+    background: #2563eb;
+    color: white;
+}
+
+.content {
+    flex: 1;
+    padding: 30px;
+    box-sizing: border-box;
+    overflow-x: auto;
+}
+
+.pagina {
+    display: none;
+}
+
+.pagina.activa {
+    display: block;
+}
+
+.header {
+    background: white;
+    padding: 28px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.06);
+}
+
+.header h1 {
+    margin: 0 0 10px 0;
+    font-size: 30px;
+}
+
+.header p {
+    margin: 0;
+    color: #4b5563;
+}
+
+.card {
+    background: white;
+    padding: 24px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.06);
+}
+
+.card h2 {
+    margin-top: 0;
+}
+
+.filters {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+input,
+select {
+    padding: 12px;
+    font-size: 15px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.filters input {
+    flex: 1;
+}
+
+button {
+    padding: 12px 18px;
+    background: #2563eb;
+    color: white;
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+th {
+    background: #1f2937;
+    color: white;
+    text-align: left;
+}
+
+th,
+td {
+    padding: 12px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+tbody tr:hover {
+    background: #eef2ff;
+}
+
+@media print {
+    .sidebar {
+        display: none;
+    }
+
+    .content {
+        padding: 0;
+    }
+
+    button,
+    .filters {
+        display: none;
+    }
+}
