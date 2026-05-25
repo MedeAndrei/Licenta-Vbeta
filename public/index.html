@@ -1,599 +1,813 @@
 <!DOCTYPE html>
-<html>
+<html lang="ro">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem informatic IMM</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-
 <div class="app">
-
     <aside class="sidebar">
-        <h2>IMM Financiar</h2>
-        <p>Gestiune si analiza financiara</p>
+        <div class="brand">
+            <div class="logo">IMM</div>
+            <div>
+                <h2>IMM Atlas</h2>
+                <p>Gestiune si analiza financiara</p>
+            </div>
+        </div>
 
-        <button class="nav active" onclick="arataPagina('cautare', this)">Cautare firme</button>
-        <button class="nav" onclick="arataPagina('introducere', this)">Introdu firma ta</button>
-        <button class="nav" onclick="arataPagina('analiza', this)">Analiza financiara</button>
-        <button class="nav" onclick="arataPagina('comparatii', this)">Comparatii</button>
-        <button class="nav" onclick="arataPagina('topuri', this)">Top firme</button>
-        <button class="nav" onclick="arataPagina('sector', this)">Analiza sectoriala</button>
-        <button class="nav" onclick="arataPagina('dashboard', this); incarcaDashboard()">Dashboard</button>
-        <button class="nav" onclick="arataPagina('clasificare', this); incarcaClasificare()">Clasificare IMM</button>
-        <button class="nav" onclick="arataPagina('rapoarte', this)">Rapoarte</button>
+        <section class="auth-card">
+            <div id="authInfo" class="auth-info">
+                <strong>Neautentificat</strong>
+                <span>Autentifica-te pentru Firma mea.</span>
+            </div>
+
+            <div class="auth-form">
+                <input id="authNume" type="text" placeholder="Nume complet">
+                <input id="authEmail" type="email" placeholder="Email">
+                <input id="authParola" type="password" placeholder="Parola">
+            </div>
+
+            <div class="auth-actions">
+                <button id="btnLogin" type="button">Login</button>
+                <button id="btnRegister" type="button" class="secondary">Register</button>
+                <button id="btnLogout" type="button" class="ghost">Logout</button>
+            </div>
+
+            <p id="authMesaj" class="auth-message"></p>
+        </section>
+
+        <nav class="menu">
+            <button class="nav active" data-page="cautare">Cautare firme</button>
+            <button class="nav" data-page="introducere" data-load="firme-utilizator">Firma mea</button>
+            <button class="nav" data-page="comparatii" data-load="firme-utilizator">Compara firma</button>
+            <button class="nav" data-page="previziune" data-load="firme-utilizator">Previziune</button>
+            <button class="nav" data-page="analiza">Analiza financiara</button>
+            <button class="nav" data-page="diagnostic">Diagnostic financiar</button>
+            <button class="nav" data-page="topuri">Top firme</button>
+            <button class="nav" data-page="sector">Analiza sectoriala</button>
+            <button class="nav" data-page="dashboard" data-load="dashboard">Dashboard</button>
+            <button class="nav" data-page="clasificare" data-load="clasificare">Clasificare IMM</button>
+            <button class="nav" data-page="rapoarte" data-load="raport">Rapoarte</button>
+        </nav>
     </aside>
 
     <main class="content">
-
-        <section id="cautare" class="pagina activa">
-            <div class="header">
-                <h1>Cautare firme</h1>
-                <p>Cautare generala in baza publica de firme.</p>
+        <section class="hero">
+            <div>
+                <span class="eyebrow">IMM Atlas</span>
+                <h1>Sistem informatic de gestiune si analiza financiara pentru IMM-uri</h1>
+                <p>Aplicatie pentru cautare firme, gestiune date proprii, analiza financiara, diagnostic automat, comparatii sectoriale si rapoarte economice.</p>
             </div>
 
-            <div class="card">
+            <div class="hero-stats">
+                <div>
+                    <strong>Piata</strong>
+                    <span>Pozitionare competitiva</span>
+                </div>
+                <div>
+                    <strong>CAEN</strong>
+                    <span>Analiza sectoriala</span>
+                </div>
+                <div>
+                    <strong>Risc</strong>
+                    <span>Diagnostic financiar</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="cautare" class="pagina activa">
+            <div class="page-title">
+                <h2>Cautare firme</h2>
+                <p>Cauta firme publice dupa denumire, CUI, localitate, judet, forma juridica sau cod CAEN.</p>
+            </div>
+
+            <div class="panel">
                 <div class="filters">
-                    <input id="cautareText" placeholder="Introdu nume firma">
-                    <button onclick="cautaFirme()">Cauta</button>
+                    <select id="criteriuCautare">
+                        <option value="denumire">Denumire</option>
+                        <option value="cui">CUI</option>
+                        <option value="localitate">Localitate</option>
+                        <option value="judet">Judet</option>
+                        <option value="forma">Forma juridica</option>
+                        <option value="caen">Cod CAEN</option>
+                    </select>
+                    <input id="cautareText" type="text" placeholder="Scrie termenul cautat">
+                    <select id="limitCautare">
+                        <option value="10">10 / pagina</option>
+                        <option value="20" selected>20 / pagina</option>
+                        <option value="50">50 / pagina</option>
+                    </select>
+                    <button id="btnCautaFirme" type="button">Cauta</button>
                 </div>
 
-                <table>
-                    <thead>
+                <div class="table-wrap">
+                    <table>
+                        <thead id="headTabelFirme">
                         <tr>
                             <th>Denumire</th>
                             <th>CUI</th>
+                            <th>Nr. inregistrare</th>
                             <th>Judet</th>
                             <th>Localitate</th>
-                            <th>Forma juridica</th>
+                            <th>Forma</th>
                             <th>Stare</th>
+                            <th>CAEN</th>
                         </tr>
-                    </thead>
-                    <tbody id="tabelFirme"></tbody>
-                </table>
+                        </thead>
+                        <tbody id="tabelFirme">
+                        <tr><td colspan="8" class="empty">Cauta o firma pentru a vedea rezultatele.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination">
+                    <button id="btnFirmeInapoi" type="button">Inapoi</button>
+                    <span id="paginaFirme">Pagina 1</span>
+                    <button id="btnFirmeInainte" type="button">Inainte</button>
+                </div>
             </div>
         </section>
 
         <section id="introducere" class="pagina">
-            <div class="header">
-                <h1>Introdu firma ta</h1>
-                <p>Adauga firma si datele financiare pentru analiza proprie.</p>
+            <div class="page-title">
+                <h2>Firma mea</h2>
+                <p>Gestioneaza firme proprii si date financiare separate de baza oficiala.</p>
             </div>
 
-            <div class="card">
-                <h2>Date firma</h2>
-
-                <div class="form-grid">
-                    <input id="denumireFirma" placeholder="Denumire firma">
-                    <input id="cuiFirma" placeholder="CUI">
-                    <input id="caenFirma" placeholder="Cod CAEN">
-                    <input id="judetFirma" placeholder="Judet">
-                    <input id="localitateFirma" placeholder="Localitate">
-                    <input id="formaFirma" placeholder="Forma juridica">
+            <div class="panel">
+                <div class="section-head">
+                    <div>
+                        <h3>Lista firmelor mele</h3>
+                        <p>Selecteaza o firma pentru completarea datelor financiare, diagnostic si comparatii.</p>
+                    </div>
+                    <button id="btnDiagnosticFirmaMea" type="button" class="secondary">Diagnostic firma mea</button>
                 </div>
 
-                <button onclick="salveazaFirma()">Salveaza firma</button>
-                <p id="mesajFirma"></p>
+                <div class="selected-company">
+                    <strong>Firma selectata</strong>
+                    <span id="firmaSelectataText">Nu este selectata nicio firma.</span>
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Denumire</th>
+                            <th>CUI</th>
+                            <th>CAEN</th>
+                            <th>Localitate</th>
+                            <th>Ani date</th>
+                        </tr>
+                        </thead>
+                        <tbody id="tabelFirmeUtilizator">
+                        <tr><td colspan="6" class="empty">Autentifica-te pentru a vedea firmele tale.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
-            <div class="card">
-                <h2>Date financiare</h2>
-
-                <div class="form-grid">
-                    <input id="idFirmaDate" placeholder="ID firma salvata">
-                    <input id="anDate" placeholder="An">
-                    <input id="cifraDate" placeholder="Cifra de afaceri">
-                    <input id="venituriDate" placeholder="Venituri totale">
-                    <input id="cheltuieliDate" placeholder="Cheltuieli totale">
-                    <input id="profitDate" placeholder="Profit net">
-                    <input id="datoriiDate" placeholder="Datorii">
-                    <input id="activeDate" placeholder="Active totale">
-                    <input id="angajatiDate" placeholder="Numar angajati">
+            <div class="grid two">
+                <div class="panel">
+                    <h3>Adaugare firma</h3>
+                    <div class="form-grid">
+                        <label>
+                            <span>Denumire firma</span>
+                            <input id="denumireFirma" type="text" placeholder="Ex: SC Exemplu SRL">
+                        </label>
+                        <label>
+                            <span>CUI</span>
+                            <input id="cuiFirma" type="number" placeholder="CUI unic">
+                        </label>
+                        <label>
+                            <span>Cod CAEN</span>
+                            <input id="caenFirma" type="text" placeholder="Ex: 6201">
+                        </label>
+                        <label>
+                            <span>Judet</span>
+                            <input id="judetFirma" type="text" placeholder="Ex: Bucuresti">
+                        </label>
+                        <label>
+                            <span>Localitate</span>
+                            <input id="localitateFirma" type="text" placeholder="Ex: Bucuresti">
+                        </label>
+                        <label>
+                            <span>Forma juridica</span>
+                            <input id="formaFirma" type="text" placeholder="Ex: SRL">
+                        </label>
+                    </div>
+                    <button id="btnSalveazaFirma" type="button">Salveaza firma</button>
+                    <p id="mesajFirma" class="message"></p>
                 </div>
 
-                <button onclick="salveazaDateFinanciare()">Salveaza date financiare</button>
-                <p id="mesajDate"></p>
+                <div class="panel">
+                    <h3>Date financiare pe ani</h3>
+                    <div class="form-grid">
+                        <label>
+                            <span>ID firma selectata</span>
+                            <input id="idFirmaDate" type="number" placeholder="Selecteaza firma din tabel" readonly>
+                        </label>
+                        <label>
+                            <span>An</span>
+                            <input id="anDate" type="number" value="2024">
+                        </label>
+                        <label>
+                            <span>Cifra de afaceri</span>
+                            <input id="cifraDate" type="number" placeholder="RON">
+                        </label>
+                        <label>
+                            <span>Venituri totale</span>
+                            <input id="venituriDate" type="number" placeholder="RON">
+                        </label>
+                        <label>
+                            <span>Cheltuieli totale</span>
+                            <input id="cheltuieliDate" type="number" placeholder="RON">
+                        </label>
+                        <label>
+                            <span>Profit net</span>
+                            <input id="profitDate" type="number" placeholder="RON">
+                        </label>
+                        <label>
+                            <span>Datorii</span>
+                            <input id="datoriiDate" type="number" placeholder="RON">
+                        </label>
+                        <label>
+                            <span>Active totale</span>
+                            <input id="activeDate" type="number" placeholder="RON">
+                        </label>
+                        <label>
+                            <span>Numar angajati</span>
+                            <input id="angajatiDate" type="number" placeholder="Persoane">
+                        </label>
+                    </div>
+                    <button id="btnSalveazaDate" type="button">Salveaza date financiare</button>
+                    <p id="mesajDate" class="message"></p>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>Istoric financiar firma selectata</h3>
+                <div id="firmaMeaKpi" class="kpi-grid"></div>
+                <div class="filters compact action-row">
+                    <button id="btnFirmaMeaDiagnostic" type="button" class="secondary">Deschide diagnostic</button>
+                    <button id="btnFirmaMeaComparatie" type="button">Deschide comparatie</button>
+                    <button id="btnFirmaMeaPreviziune" type="button">Deschide previziune</button>
+                </div>
+                <div id="graficFirmaMea" class="chart"></div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>An</th>
+                            <th>Cifra afaceri</th>
+                            <th>Venituri totale</th>
+                            <th>Cheltuieli totale</th>
+                            <th>Profit net</th>
+                            <th>Datorii</th>
+                            <th>Active totale</th>
+                            <th>Angajati</th>
+                        </tr>
+                        </thead>
+                        <tbody id="tabelDateFirmaUtilizator">
+                        <tr><td colspan="8" class="empty">Selecteaza o firma pentru a vedea istoricul financiar.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
         <section id="analiza" class="pagina">
-            <div class="header">
-                <h1>Analiza financiara</h1>
-                <p>Cauta o firma cu date financiare si vezi indicatorii calculati.</p>
+            <div class="page-title">
+                <h2>Analiza financiara</h2>
+                <p>Cauta firme cu date financiare oficiale si analizeaza evolutia indicatorilor pe ani.</p>
             </div>
 
-            <div class="card">
+            <div class="panel">
                 <div class="filters">
-                    <input id="analizaText" placeholder="Introdu nume firma">
-                    <button onclick="cautaFirmeFinanciare()">Cauta</button>
+                    <select id="criteriuAnaliza">
+                        <option value="denumire">Denumire</option>
+                        <option value="cui">CUI</option>
+                        <option value="localitate">Localitate</option>
+                        <option value="judet">Judet</option>
+                        <option value="caen">Cod CAEN</option>
+                    </select>
+                    <input id="analizaText" type="text" placeholder="Cauta firma cu date financiare">
+                    <select id="limitAnaliza">
+                        <option value="5">5 / pagina</option>
+                        <option value="10" selected>10 / pagina</option>
+                        <option value="20">20 / pagina</option>
+                    </select>
+                    <button id="btnCautaAnaliza" type="button">Cauta</button>
                 </div>
 
-                <table>
-                    <thead>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
                         <tr>
                             <th>Denumire</th>
                             <th>CUI</th>
                             <th>Judet</th>
                             <th>Localitate</th>
+                            <th>CAEN</th>
+                            <th>Ani disponibili</th>
                         </tr>
-                    </thead>
-                    <tbody id="tabelFirmeFinanciare"></tbody>
-                </table>
+                        </thead>
+                        <tbody id="tabelFirmeFinanciare">
+                        <tr><td colspan="6" class="empty">Cauta o firma pentru analiza financiara.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination">
+                    <button id="btnAnalizaInapoi" type="button">Inapoi</button>
+                    <span id="paginaAnaliza">Pagina 1</span>
+                    <button id="btnAnalizaInainte" type="button">Inainte</button>
+                </div>
             </div>
 
-            <div class="card">
-                <h2>Indicatori financiari</h2>
-                <table>
-                    <thead>
+            <div class="panel">
+                <h3>Indicatori financiari</h3>
+                <div id="graficAnaliza" class="chart"></div>
+                <div id="concluziiAnaliza" class="diagnostic-box compact-box">
+                    Selecteaza o firma pentru concluzii automate pe baza evolutiei.
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
                         <tr>
                             <th>An</th>
-                            <th>Cifra de afaceri</th>
-                            <th>Profit net</th>
+                            <th>Cifra afaceri</th>
+                            <th>Profit</th>
                             <th>Angajati</th>
                             <th>Marja profit</th>
-                            <th>Rata cheltuieli</th>
                             <th>Productivitate</th>
                             <th>Grad indatorare</th>
+                            <th>Evolutie CA</th>
                         </tr>
-                    </thead>
-                    <tbody id="tabelAnaliza"></tbody>
-                </table>
+                        </thead>
+                        <tbody id="tabelAnaliza">
+                        <tr><td colspan="8" class="empty">Selecteaza o firma din rezultatele cautarii.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="diagnostic" class="pagina">
+            <div class="page-title">
+                <h2>Diagnostic financiar</h2>
+                <p>Genereaza diagnostic financiar pentru firme publice sau pentru firma proprie selectata.</p>
+            </div>
+
+            <div class="grid two">
+                <div class="panel">
+                    <h3>Firma publica</h3>
+                    <div class="filters compact">
+                        <input id="diagnosticCui" type="text" placeholder="Introdu CUI firma publica">
+                        <button id="btnDiagnostic" type="button">Diagnostic dupa CUI</button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>Firma mea</h3>
+                    <p class="muted">Pentru firma proprie, selecteaza firma in pagina Firma mea, apoi foloseste butonul Diagnostic firma mea.</p>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>Scoruri</h3>
+                <div id="diagnosticScoruri" class="kpi-grid">
+                    <div class="kpi"><strong>-</strong><span>Scor general</span></div>
+                    <div class="kpi"><strong>-</strong><span>Profitabilitate</span></div>
+                    <div class="kpi"><strong>-</strong><span>Eficienta</span></div>
+                    <div class="kpi"><strong>-</strong><span>Stabilitate / risc</span></div>
+                </div>
+            </div>
+
+            <div class="grid two diagnostic-grid">
+                <div class="panel">
+                    <h3>Indicatori</h3>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Indicator</th>
+                                <th>Valoare</th>
+                                <th>Media CAEN</th>
+                                <th>Status</th>
+                                <th>Explicatie</th>
+                            </tr>
+                            </thead>
+                            <tbody id="tabelDiagnosticIndicatori">
+                            <tr><td colspan="5" class="empty">Genereaza un diagnostic pentru a vedea indicatorii.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>Interpretare</h3>
+                    <div id="diagnosticInterpretare" class="diagnostic-box">
+                        Rezultatul diagnosticului va include explicarea scorurilor, concluzii, puncte forte, riscuri si recomandari.
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>Grafice diagnostic</h3>
+                <div id="graficDiagnostic" class="chart"></div>
             </div>
         </section>
 
         <section id="comparatii" class="pagina">
-            <div class="header">
-                <h1>Comparatii</h1>
-                <p>Compara firma introdusa cu media pietei pentru acelasi cod CAEN.</p>
+            <div class="page-title">
+                <h2>Compara firma</h2>
+                <p>Compara firma ta cu media pietei si urmareste pozitionarea fata de firmele din acelasi cod CAEN.</p>
             </div>
 
-            <div class="card">
+            <div class="panel">
                 <div class="filters">
-                    <input id="idFirmaComparatie" placeholder="ID firma introdusa">
-                    <input id="anComparatie" placeholder="An" value="2024">
-                    <button onclick="comparaFirma()">Compara</button>
+                    <select id="firmaComparatie"></select>
+                    <select id="anComparatie" class="year-select"></select>
+                    <button id="btnComparaFirma" type="button">Compara</button>
                 </div>
 
-                <table>
-                    <thead>
+                <div id="kpiComparatie" class="kpi-grid"></div>
+
+                <div id="graficComparatie" class="chart"></div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
                         <tr>
                             <th>Indicator</th>
                             <th>Firma ta</th>
                             <th>Media pietei</th>
+                            <th>Diferenta</th>
                         </tr>
-                    </thead>
-                    <tbody id="tabelComparatie"></tbody>
-                </table>
+                        </thead>
+                        <tbody id="tabelComparatie">
+                        <tr><td colspan="4" class="empty">Alege firma si anul pentru comparatie.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Top firme din acelasi CAEN</h3>
+                <div id="graficTopComparatie" class="chart"></div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Denumire</th>
+                            <th>CUI</th>
+                            <th>Judet</th>
+                            <th>Cifra afaceri</th>
+                            <th>Profit</th>
+                            <th>Marja profit</th>
+                        </tr>
+                        </thead>
+                        <tbody id="tabelTopComparatie">
+                        <tr><td colspan="7" class="empty">Ruleaza comparatia pentru a vedea topul CAEN.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="grid two section-spaced">
+                    <div>
+                        <h3>Pozitie estimata in piata</h3>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                <tr>
+                                    <th>Indicator</th>
+                                    <th>Pozitie</th>
+                                    <th>Firme CAEN</th>
+                                    <th>Interpretare</th>
+                                </tr>
+                                </thead>
+                                <tbody id="tabelPozitiiComparatie">
+                                <tr><td colspan="4" class="empty">Ruleaza comparatia pentru pozitionare.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3>Concluzii si recomandari</h3>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                <tr>
+                                    <th>Indicator</th>
+                                    <th>Concluzie</th>
+                                    <th>Recomandare</th>
+                                </tr>
+                                </thead>
+                                <tbody id="tabelConcluziiComparatie">
+                                <tr><td colspan="3" class="empty">Ruleaza comparatia pentru recomandari.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="previziune" class="pagina">
+            <div class="page-title">
+                <h2>Previziune financiara</h2>
+                <p>Estimeaza evolutia firmei pentru anul urmator folosind ritmul mediu anual de crestere si scenarii simple.</p>
+            </div>
+
+            <div class="panel">
+                <div class="filters">
+                    <select id="firmaPreviziune"></select>
+                    <button id="btnPreviziune" type="button">Calculeaza previziune</button>
+                </div>
+
+                <div id="previziuneKpi" class="kpi-grid"></div>
+                <div id="graficPreviziune" class="chart"></div>
+
+                <div class="grid two">
+                    <div>
+                        <h3>Scenarii</h3>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                <tr>
+                                    <th>Scenariu</th>
+                                    <th>An</th>
+                                    <th>Cifra afaceri</th>
+                                    <th>Profit net</th>
+                                    <th>Datorii</th>
+                                    <th>Angajati</th>
+                                </tr>
+                                </thead>
+                                <tbody id="tabelPreviziune">
+                                <tr><td colspan="6" class="empty">Selecteaza firma si calculeaza previziunea.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3>Interpretare</h3>
+                        <div id="previziuneInterpretare" class="diagnostic-box">
+                            Previziunea va explica trendul cifrei de afaceri, profitului, datoriilor si posibila schimbare a categoriei IMM.
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
         <section id="topuri" class="pagina">
-            <div class="header">
-                <h1>Top firme</h1>
-                <p>Clasamente dupa cifra de afaceri, profit net sau numar de angajati.</p>
+            <div class="page-title">
+                <h2>Top firme</h2>
+                <p>Genereaza clasamente dupa indicatori financiari si operationali.</p>
             </div>
 
-            <div class="card">
+            <div class="panel">
                 <div class="filters">
                     <select id="criteriuTop">
                         <option value="cifra_afaceri">Cifra de afaceri</option>
                         <option value="profit_net">Profit net</option>
+                        <option value="venituri_totale">Venituri totale</option>
+                        <option value="cheltuieli_totale">Cheltuieli totale</option>
+                        <option value="datorii">Datorii</option>
+                        <option value="active_totale">Active totale</option>
                         <option value="nr_angajati">Numar angajati</option>
+                        <option value="marja_profitului">Marja profitului</option>
+                        <option value="productivitate_angajat">Productivitate / angajat</option>
+                        <option value="grad_indatorare">Grad de indatorare</option>
                     </select>
-
-                    <input id="anTop" value="2024">
-                    <button onclick="incarcaTop()">Afiseaza top</button>
+                    <select id="anTop" class="year-select"></select>
+                    <input id="limitTop" type="number" value="10" min="5" max="100" placeholder="Cate firme">
+                    <button id="btnIncarcaTop" type="button">Afiseaza top</button>
                 </div>
 
-                <table>
-                    <thead>
+                <div id="graficTop" class="chart"></div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
                         <tr>
+                            <th>#</th>
                             <th>Denumire</th>
                             <th>CUI</th>
                             <th>Judet</th>
-                            <th>Valoare</th>
+                            <th>Localitate</th>
+                            <th class="col-caen-code">CAEN</th>
+                            <th id="coloanaTop">Valoare</th>
+                            <th>Profit</th>
+                            <th>Angajati</th>
                         </tr>
-                    </thead>
-                    <tbody id="tabelTop"></tbody>
-                </table>
+                        </thead>
+                        <tbody id="tabelTop">
+                        <tr><td colspan="9" class="empty">Alege criteriul pentru top.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
         <section id="sector" class="pagina">
-            <div class="header">
-                <h1>Analiza sectoriala</h1>
-                <p>Analiza pentru un domeniu de activitate CAEN.</p>
+            <div class="page-title">
+                <h2>Analiza sectoriala</h2>
+                <p>Compara unul sau mai multe sectoare CAEN dupa volum, profitabilitate, risc si productivitate.</p>
             </div>
 
-            <div class="card">
+            <div class="panel">
                 <div class="filters">
-                    <input id="codCaenSector" placeholder="Cod CAEN" value="6201">
-                    <input id="anSector" placeholder="An" value="2024">
-                    <button onclick="incarcaSector()">Analizeaza</button>
+                    <input id="codCaenSector" type="text" placeholder="Ex: 6201, 6202, 6311 sau lasa gol">
+                    <select id="anSector" class="year-select"></select>
+                    <input id="limitSector" type="number" value="10" min="5" max="50" placeholder="Cate sectoare">
+                    <button id="btnIncarcaSector" type="button">Analizeaza</button>
                 </div>
 
-                <table>
-                    <thead>
+                <div id="sectorKpi" class="kpi-grid"></div>
+                <div id="graficSector" class="chart"></div>
+                <div id="sectorInterpretare" class="diagnostic-box compact-box">
+                    Introdu unul sau mai multe coduri CAEN pentru comparatie sectoriala.
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
                         <tr>
                             <th>Cod CAEN</th>
-                            <th>Denumire CAEN</th>
-                            <th>Numar firme</th>
-                            <th>Cifra de afaceri totala</th>
+                            <th>Denumire</th>
+                            <th>Firme</th>
+                            <th>Cifra afaceri totala</th>
                             <th>Profit total</th>
+                            <th>Medie cifra afaceri</th>
+                            <th>Medie profit</th>
+                            <th>Marja medie</th>
+                            <th>Grad indatorare mediu</th>
+                            <th>Productivitate medie</th>
                         </tr>
-                    </thead>
-                    <tbody id="tabelSector"></tbody>
-                </table>
+                        </thead>
+                        <tbody id="tabelSector">
+                        <tr><td colspan="10" class="empty">Ruleaza analiza sectoriala.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
         <section id="dashboard" class="pagina">
-            <div class="header">
-                <h1>Dashboard economic</h1>
-                <p>Rezultate agregate pentru economie si domenii CAEN.</p>
+            <div class="page-title">
+                <h2>Dashboard</h2>
+                <p>Privire sintetica asupra indicatorilor economici pe an, judet si coduri CAEN.</p>
             </div>
 
-            <div class="card">
-                <h2>Top judete dupa cifra de afaceri</h2>
-                <table>
-                    <thead>
+            <div class="panel">
+                <div class="filters">
+                    <select id="anDashboard" class="year-select"></select>
+                    <input id="judetDashboard" type="text" placeholder="Filtru judet optional">
+                    <input id="caenDashboard" type="text" placeholder="Filtru CAEN optional">
+                    <input id="limitDashboard" type="number" value="10" min="5" max="50">
+                    <button id="btnDashboard" type="button">Actualizeaza</button>
+                </div>
+
+                <div id="dashboardKpi" class="kpi-grid"></div>
+            </div>
+
+            <div class="grid two">
+                <div class="panel">
+                    <h3>Top judete</h3>
+                    <div id="graficJudete" class="chart"></div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Judet</th>
+                                <th>Firme</th>
+                                <th>Cifra afaceri</th>
+                                <th>Profit</th>
+                            </tr>
+                            </thead>
+                            <tbody id="tabelDashboardJudete"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>Top CAEN</h3>
+                    <div id="graficCaen" class="chart"></div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>CAEN</th>
+                                <th>Denumire</th>
+                                <th>Firme</th>
+                                <th>Cifra afaceri</th>
+                            </tr>
+                            </thead>
+                            <tbody id="tabelDashboardCaen"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>Judete dupa marja medie</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
                         <tr>
                             <th>Judet</th>
-                            <th>Numar firme</th>
-                            <th>Cifra de afaceri totala</th>
-                            <th>Profit total</th>
+                            <th>Firme</th>
+                            <th>Marja medie</th>
                         </tr>
-                    </thead>
-                    <tbody id="tabelDashboardJudete"></tbody>
-                </table>
-            </div>
-
-            <div class="card">
-                <h2>Top domenii CAEN</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Cod CAEN</th>
-                            <th>Denumire</th>
-                            <th>Numar firme</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabelDashboardCaen"></tbody>
-                </table>
+                        </thead>
+                        <tbody id="tabelProfitabilitate"></tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
         <section id="clasificare" class="pagina">
-            <div class="header">
-                <h1>Clasificare IMM</h1>
-                <p>Distributia firmelor dupa dimensiune.</p>
+            <div class="page-title">
+                <h2>Clasificare IMM</h2>
+                <p>Vezi distributia firmelor pe categorii IMM si incadreaza rapid o firma dupa praguri.</p>
             </div>
 
-            <div class="card">
-                <div class="filters">
-                    <input id="anClasificare" value="2024">
-                    <button onclick="incarcaClasificare()">Afiseaza</button>
+            <div class="grid two">
+                <div class="panel">
+                    <h3>Distributie IMM</h3>
+                    <div class="filters compact">
+                        <select id="anClasificare" class="year-select"></select>
+                        <button id="btnClasificare" type="button">Afiseaza</button>
+                    </div>
+
+                    <div id="graficClasificare" class="chart"></div>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Categorie</th>
+                                <th>Numar firme</th>
+                                <th>Medie cifra afaceri</th>
+                                <th>Medie profit</th>
+                                <th>Medie angajati</th>
+                            </tr>
+                            </thead>
+                            <tbody id="tabelClasificare"></tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Categorie</th>
-                            <th>Numar firme</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabelClasificare"></tbody>
-                </table>
+                <div class="panel">
+                    <h3>Incadrare firma</h3>
+                    <div class="form-grid single">
+                        <label>
+                            <span>Cifra de afaceri</span>
+                            <input id="clasifCifra" type="number" placeholder="RON">
+                        </label>
+                        <label>
+                            <span>Numar angajati</span>
+                            <input id="clasifAngajati" type="number" placeholder="Persoane">
+                        </label>
+                    </div>
+                    <button id="btnClasificaFirma" type="button">Clasifica</button>
+                    <div id="rezultatClasificare" class="result-box">
+                        Completeaza valorile pentru incadrare.
+                    </div>
+                </div>
             </div>
         </section>
 
         <section id="rapoarte" class="pagina">
-            <div class="header">
-                <h1>Rapoarte</h1>
-                <p>Export rapid pentru rezultatele afisate in aplicatie.</p>
+            <div class="page-title">
+                <h2>Rapoarte</h2>
+                <p>Raportul strange ultimele rezultate generate in aplicatie si permite export CSV sau PDF.</p>
             </div>
 
-            <div class="card">
-                <button onclick="window.print()">Export PDF</button>
-                <button onclick="exportCsv()">Export CSV simplu</button>
-                <p>Exportul PDF foloseste functia de printare a browserului.</p>
+            <div class="panel">
+                <div class="filters compact">
+                    <select id="firmaRaport"></select>
+                    <button id="btnRaportFirma" type="button">Raport complet firma</button>
+                    <button id="btnActualizeazaRaport" type="button">Actualizeaza raport</button>
+                    <button id="btnExportCsv" type="button">Export CSV</button>
+                    <button id="btnExportPdf" type="button">Export PDF</button>
+                </div>
+
+                <div id="raportPreview" class="report">
+                    <p>Nu exista rezultate in raport. Incarca mai intai cautari, topuri, dashboard sau analize.</p>
+                </div>
             </div>
         </section>
-
     </main>
-
 </div>
 
-<script>
-function arataPagina(id, buton) {
-    document.querySelectorAll('.pagina').forEach(p => p.classList.remove('activa'));
-    document.getElementById(id).classList.add('activa');
-
-    document.querySelectorAll('.nav').forEach(b => b.classList.remove('active'));
-    buton.classList.add('active');
-}
-
-async function cautaFirme() {
-    const search = document.getElementById('cautareText').value.trim();
-    const tabel = document.getElementById('tabelFirme');
-
-    if (search.length < 3) {
-        tabel.innerHTML = randMesaj(6, 'Introdu minim 3 caractere.');
-        return;
-    }
-
-    tabel.innerHTML = randMesaj(6, 'Se cauta...');
-
-    const response = await fetch(`/api/firme?search=${encodeURIComponent(search)}`);
-    const data = await response.json();
-
-    tabel.innerHTML = '';
-
-    data.forEach(firma => {
-        tabel.innerHTML += `
-            <tr>
-                <td>${firma.denumire_firma || ''}</td>
-                <td>${firma.cui || ''}</td>
-                <td>${firma.judet || ''}</td>
-                <td>${firma.localitate || ''}</td>
-                <td>${firma.forma_juridica || ''}</td>
-                <td>${firma.cod_stare || ''}</td>
-            </tr>
-        `;
-    });
-}
-
-async function cautaFirmeFinanciare() {
-    const search = document.getElementById('analizaText').value.trim();
-    const tabel = document.getElementById('tabelFirmeFinanciare');
-
-    if (search.length < 3) {
-        tabel.innerHTML = randMesaj(4, 'Introdu minim 3 caractere.');
-        return;
-    }
-
-    tabel.innerHTML = randMesaj(4, 'Se cauta...');
-
-    const response = await fetch(`/api/firme-financiare?search=${encodeURIComponent(search)}`);
-    const data = await response.json();
-
-    tabel.innerHTML = '';
-
-    data.forEach(firma => {
-        tabel.innerHTML += `
-            <tr onclick="incarcaAnaliza('${firma.cui}')">
-                <td>${firma.denumire_firma || ''}</td>
-                <td>${firma.cui || ''}</td>
-                <td>${firma.judet || ''}</td>
-                <td>${firma.localitate || ''}</td>
-            </tr>
-        `;
-    });
-}
-
-async function incarcaAnaliza(cui) {
-    const tabel = document.getElementById('tabelAnaliza');
-
-    tabel.innerHTML = randMesaj(8, 'Se incarca analiza...');
-
-    const response = await fetch(`/api/analiza-financiara?cui=${encodeURIComponent(cui)}`);
-    const data = await response.json();
-
-    tabel.innerHTML = '';
-
-    data.forEach(row => {
-        tabel.innerHTML += `
-            <tr>
-                <td>${row.an || ''}</td>
-                <td>${numar(row.cifra_afaceri)}</td>
-                <td>${numar(row.profit_net)}</td>
-                <td>${numar(row.nr_angajati)}</td>
-                <td>${procent(row.marja_profitului)}</td>
-                <td>${procent(row.rata_cheltuielilor)}</td>
-                <td>${numar(row.productivitate_angajat)}</td>
-                <td>${procent(row.grad_indatorare)}</td>
-            </tr>
-        `;
-    });
-}
-
-async function salveazaFirma() {
-    const firma = {
-        denumire_firma: document.getElementById('denumireFirma').value,
-        cui: valoare('cuiFirma'),
-        cod_caen: document.getElementById('caenFirma').value,
-        judet: document.getElementById('judetFirma').value,
-        localitate: document.getElementById('localitateFirma').value,
-        forma_juridica: document.getElementById('formaFirma').value
-    };
-
-    const response = await fetch('/api/firma-utilizator', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(firma)
-    });
-
-    const data = await response.json();
-    document.getElementById('mesajFirma').innerText = 'Firma salvata cu ID: ' + data.id_firma;
-    document.getElementById('idFirmaDate').value = data.id_firma;
-}
-
-async function salveazaDateFinanciare() {
-    const date = {
-        id_firma: valoare('idFirmaDate'),
-        an: valoare('anDate'),
-        cifra_afaceri: valoare('cifraDate'),
-        venituri_totale: valoare('venituriDate'),
-        cheltuieli_totale: valoare('cheltuieliDate'),
-        profit_net: valoare('profitDate'),
-        datorii: valoare('datoriiDate'),
-        active_totale: valoare('activeDate'),
-        nr_angajati: valoare('angajatiDate')
-    };
-
-    const response = await fetch('/api/date-firma-utilizator', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(date)
-    });
-
-    const data = await response.json();
-    document.getElementById('mesajDate').innerText = data.mesaj;
-}
-
-async function comparaFirma() {
-    const id = document.getElementById('idFirmaComparatie').value;
-    const an = document.getElementById('anComparatie').value;
-    const tabel = document.getElementById('tabelComparatie');
-
-    const response = await fetch(`/api/comparatie?id_firma=${id}&an=${an}`);
-    const data = await response.json();
-
-    if (!data.firma) {
-        tabel.innerHTML = randMesaj(3, 'Nu exista date pentru firma aleasa.');
-        return;
-    }
-
-    tabel.innerHTML = `
-        <tr><td>Cifra de afaceri</td><td>${numar(data.firma.cifra_afaceri)}</td><td>${numar(data.piata.medie_cifra_afaceri)}</td></tr>
-        <tr><td>Profit net</td><td>${numar(data.firma.profit_net)}</td><td>${numar(data.piata.medie_profit_net)}</td></tr>
-        <tr><td>Angajati</td><td>${numar(data.firma.nr_angajati)}</td><td>${numar(data.piata.medie_angajati)}</td></tr>
-    `;
-}
-
-async function incarcaTop() {
-    const criteriu = document.getElementById('criteriuTop').value;
-    const an = document.getElementById('anTop').value;
-    const tabel = document.getElementById('tabelTop');
-
-    tabel.innerHTML = randMesaj(4, 'Se incarca topul...');
-
-    const response = await fetch(`/api/top-firme?criteriu=${criteriu}&an=${an}`);
-    const data = await response.json();
-
-    tabel.innerHTML = '';
-
-    data.forEach(row => {
-        tabel.innerHTML += `
-            <tr>
-                <td>${row.denumire_firma || ''}</td>
-                <td>${row.cui || ''}</td>
-                <td>${row.judet || ''}</td>
-                <td>${numar(row.valoare)}</td>
-            </tr>
-        `;
-    });
-}
-
-async function incarcaDashboard() {
-    const response = await fetch('/api/dashboard');
-    const data = await response.json();
-
-    const tabelJudete = document.getElementById('tabelDashboardJudete');
-    const tabelCaen = document.getElementById('tabelDashboardCaen');
-
-    tabelJudete.innerHTML = '';
-    tabelCaen.innerHTML = '';
-
-    data.judete.forEach(row => {
-        tabelJudete.innerHTML += `
-            <tr>
-                <td>${row.judet || ''}</td>
-                <td>${numar(row.numar_firme)}</td>
-                <td>${numar(row.cifra_afaceri_totala)}</td>
-                <td>${numar(row.profit_total)}</td>
-            </tr>
-        `;
-    });
-
-    data.caen.forEach(row => {
-        tabelCaen.innerHTML += `
-            <tr>
-                <td>${row.caen_code || row.cod_caen || ''}</td>
-                <td>${row.caen_name || row.denumire_caen || ''}</td>
-                <td>${numar(row.nr_firme || row.numar_firme)}</td>
-            </tr>
-        `;
-    });
-}
-
-async function incarcaClasificare() {
-    const an = document.getElementById('anClasificare') ? document.getElementById('anClasificare').value : 2024;
-    const tabel = document.getElementById('tabelClasificare');
-
-    const response = await fetch(`/api/clasificare-imm?an=${an}`);
-    const data = await response.json();
-
-    tabel.innerHTML = '';
-
-    data.forEach(row => {
-        tabel.innerHTML += `
-            <tr>
-                <td>${row.categorie}</td>
-                <td>${numar(row.numar_firme)}</td>
-            </tr>
-        `;
-    });
-}
-
-async function incarcaSector() {
-    const cod = document.getElementById('codCaenSector').value;
-    const an = document.getElementById('anSector').value;
-    const tabel = document.getElementById('tabelSector');
-
-    const response = await fetch(`/api/sector-caen?cod_caen=${cod}&an=${an}`);
-    const data = await response.json();
-
-    tabel.innerHTML = '';
-
-    data.forEach(row => {
-        tabel.innerHTML += `
-            <tr>
-                <td>${row.cod_caen || ''}</td>
-                <td>${row.denumire_caen || ''}</td>
-                <td>${numar(row.numar_firme)}</td>
-                <td>${numar(row.cifra_afaceri_totala)}</td>
-                <td>${numar(row.profit_total)}</td>
-            </tr>
-        `;
-    });
-}
-
-function exportCsv() {
-    const text = 'Exportul CSV va fi personalizat pentru tabelul ales.';
-    const blob = new Blob([text], { type: 'text/csv' });
-    const link = document.createElement('a');
-
-    link.href = URL.createObjectURL(blob);
-    link.download = 'raport.csv';
-    link.click();
-}
-
-function valoare(id) {
-    const v = document.getElementById(id).value;
-    return v === '' ? null : Number(v);
-}
-
-function numar(value) {
-    if (value === null || value === undefined) {
-        return '';
-    }
-
-    return Number(value).toLocaleString('ro-RO');
-}
-
-function procent(value) {
-    if (value === null || value === undefined) {
-        return '';
-    }
-
-    return Number(value).toLocaleString('ro-RO') + '%';
-}
-
-function randMesaj(colspan, mesaj) {
-    return `<tr><td colspan="${colspan}">${mesaj}</td></tr>`;
-}
-</script>
-
+<script src="app.js"></script>
 </body>
 </html>
