@@ -58,6 +58,7 @@ function initEvenimente() {
     onEnter('analizaText', () => cautaFirmeFinanciare(1));
 
     on('btnSalveazaFirma', 'click', salveazaFirma);
+    on('btnCurataFirma', 'click', curataFormularFirma);
     on('btnSalveazaDate', 'click', salveazaDateFinanciare);
     on('btnDiagnosticFirmaMea', 'click', deschideDiagnosticFirmaMea);
     on('btnFirmaMeaDiagnostic', 'click', deschideDiagnosticFirmaMea);
@@ -231,6 +232,7 @@ async function login() {
         state.token = data.token;
         state.utilizator = data.utilizator;
 
+        sessionStorage.setItem('imm_session_started', String(Date.now()));
         sessionStorage.setItem('imm_token', data.token);
         sessionStorage.setItem('imm_user', JSON.stringify(data.utilizator));
 
@@ -258,6 +260,7 @@ async function logout() {
 
     sessionStorage.removeItem('imm_token');
     sessionStorage.removeItem('imm_user');
+    sessionStorage.removeItem('imm_session_started');
 
     actualizeazaZonaAutentificare();
     curataZonaFirmaMea();
@@ -612,8 +615,8 @@ async function salveazaDateFinanciare() {
 function valideazaDateFinanciareFormular() {
     const an = Number(val('anDate'));
 
-    if (!Number.isInteger(an) || an < 1990 || an > 2100) {
-        throw new Error('Anul trebuie sa fie valid, intre 1990 si 2100.');
+    if (!ANI_RAPORTARE.includes(an)) {
+        throw new Error('Anul trebuie sa fie intre 2016 si 2024, pentru comparatii corecte cu baza oficiala.');
     }
 
     const nrAngajati = numarPozitivSauZero('angajatiDate', 'Numar angajati');
@@ -627,7 +630,7 @@ function valideazaDateFinanciareFormular() {
         throw new Error('Profitul net trebuie sa fie numeric.');
     }
 
-    return {
+    const date = {
         id_firma: numarPozitivSauZero('idFirmaDate', 'ID firma'),
         an,
         cifra_afaceri: numarPozitivSauZero('cifraDate', 'Cifra de afaceri'),
@@ -638,6 +641,16 @@ function valideazaDateFinanciareFormular() {
         active_totale: numarPozitivSauZero('activeDate', 'Active totale'),
         nr_angajati: nrAngajati
     };
+
+    if (date.datorii > 0 && date.active_totale <= 0) {
+        throw new Error('Activele totale trebuie sa fie mai mari decat 0 daca firma are datorii.');
+    }
+
+    if (date.venituri_totale > 0 && date.cheltuieli_totale > date.venituri_totale * 3) {
+        throw new Error('Cheltuielile par prea mari fata de venituri. Verifica valorile inainte de salvare.');
+    }
+
+    return date;
 }
 
 async function incarcaFirmeUtilizator() {
@@ -661,11 +674,21 @@ async function incarcaFirmeUtilizator() {
                     <td>${esc(firma.cod_caen)}</td>
                     <td>${esc(firma.localitate)}</td>
                     <td>${esc(firma.ani_introdusi)} (${esc(firma.primul_an || '-')}-${esc(firma.ultimul_an || '-')})</td>
+                    <td>
+                        <button type="button" class="danger small" data-delete-firma="${esc(firma.id_firma)}">Sterge</button>
+                    </td>
                 </tr>
-            `).join('') || randMesaj(6, 'Nu ai firme introduse.');
+            `).join('') || randMesaj(7, 'Nu ai firme introduse.');
 
             document.querySelectorAll('#tabelFirmeUtilizator tr[data-id]').forEach(row => {
                 row.addEventListener('click', () => selecteazaFirmaUtilizator(row.dataset.id, data));
+            });
+
+            document.querySelectorAll('[data-delete-firma]').forEach(button => {
+                button.addEventListener('click', event => {
+                    event.stopPropagation();
+                    stergeFirmaUtilizator(button.dataset.deleteFirma);
+                });
             });
         }
 
@@ -675,11 +698,46 @@ async function incarcaFirmeUtilizator() {
             `).join('') || '<option value="">Nu exista firme introduse</option>';
         });
     } catch (err) {
-        if (tabel) tabel.innerHTML = randMesaj(6, err.message);
+        if (tabel) tabel.innerHTML = randMesaj(7, err.message);
         selecturiFirma.forEach(select => {
             select.innerHTML = `<option value="">${esc(err.message)}</option>`;
         });
     }
+}
+
+async function stergeFirmaUtilizator(idFirma) {
+    const firma = state.firmeUtilizator.find(item => String(item.id_firma) === String(idFirma));
+    const nume = firma?.denumire_firma || `ID ${idFirma}`;
+
+    if (!confirm(`Stergi firma "${nume}" si toate datele financiare introduse pentru ea?`)) {
+        return;
+    }
+
+    try {
+        cereAutentificare();
+        const data = await api(`/api/firma-utilizator/${encodeURIComponent(idFirma)}`, {
+            method: 'DELETE'
+        });
+
+        if (String(state.firmaSelectataId) === String(idFirma)) {
+            state.firmaSelectataId = null;
+            setValue('idFirmaDate', '');
+            setText('firmaSelectataText', 'Nu este selectata nicio firma.');
+            setHtml('tabelDateFirmaUtilizator', randMesaj(9, 'Selecteaza o firma pentru a vedea istoricul financiar.'));
+            setHtml('graficFirmaMea', '');
+            setHtml('firmaMeaKpi', '');
+        }
+
+        setText('mesajFirma', data.mesaj || 'Firma a fost stearsa.');
+        await incarcaFirmeUtilizator();
+    } catch (err) {
+        setText('mesajFirma', err.message);
+    }
+}
+
+function curataFormularFirma() {
+    ['denumireFirma', 'cuiFirma', 'caenFirma', 'judetFirma', 'localitateFirma', 'formaFirma'].forEach(id => setValue(id, ''));
+    setText('mesajFirma', '');
 }
 
 function selecteazaFirmaUtilizator(id, firme = state.firmeUtilizator) {
@@ -720,13 +778,43 @@ async function incarcaDateFirmaUtilizator(idFirma) {
                 <td>${numar(row.datorii)}</td>
                 <td>${numar(row.active_totale)}</td>
                 <td>${numar(row.nr_angajati)}</td>
+                <td>
+                    <button type="button" class="danger small" data-delete-an="${esc(row.id_date)}" data-delete-an-label="${esc(row.an)}">
+                        Sterge
+                    </button>
+                </td>
             </tr>
-        `).join('') || randMesaj(8, 'Nu exista ani introdusi pentru firma selectata.');
+        `).join('') || randMesaj(9, 'Nu exista ani introdusi pentru firma selectata.');
+
+        tabel.querySelectorAll('[data-delete-an]').forEach(button => {
+            button.addEventListener('click', () => {
+                stergeAnFinanciar(button.dataset.deleteAn, button.dataset.deleteAnLabel, idFirma);
+            });
+        });
 
         renderFirmaMeaCharts('graficFirmaMea', data);
         renderFirmaMeaKpi(data);
     } catch (err) {
-        tabel.innerHTML = randMesaj(8, err.message);
+        tabel.innerHTML = randMesaj(9, err.message);
+    }
+}
+
+async function stergeAnFinanciar(idDate, an, idFirma) {
+    if (!confirm(`Stergi datele financiare introduse pentru anul ${an}?`)) {
+        return;
+    }
+
+    try {
+        cereAutentificare();
+        const data = await api(`/api/date-firma-utilizator/${encodeURIComponent(idDate)}`, {
+            method: 'DELETE'
+        });
+
+        setText('mesajDate', data.mesaj || 'Anul financiar a fost sters.');
+        await incarcaDateFirmaUtilizator(idFirma || state.firmaSelectataId);
+        await incarcaFirmeUtilizator();
+    } catch (err) {
+        setText('mesajDate', err.message);
     }
 }
 
@@ -746,7 +834,7 @@ function renderFirmaMeaKpi(data) {
         <div class="kpi"><strong>${esc(ultimul.an)}</strong><span>Ultimul an introdus</span></div>
         <div class="kpi"><strong>${numar(ultimul.cifra_afaceri)}</strong><span>Cifra de afaceri</span></div>
         <div class="kpi"><strong>${numar(ultimul.profit_net)}</strong><span>Profit net</span></div>
-        <div class="kpi"><strong>${categorieImmClient(ultimul.cifra_afaceri, ultimul.nr_angajati)}</strong><span>Incadrare IMM</span></div>
+        <div class="kpi kpi-imm"><strong>${categorieImmClient(ultimul.cifra_afaceri, ultimul.nr_angajati)}</strong><span>Incadrare IMM</span></div>
         <div class="kpi"><strong>${evolutieCa === null ? '-' : procent(evolutieCa)}</strong><span>Evolutie CA fata de anul anterior</span></div>
     `);
 }
@@ -758,8 +846,8 @@ function curataZonaFirmaMea() {
     const tabelFirme = document.getElementById('tabelFirmeUtilizator');
     const tabelDate = document.getElementById('tabelDateFirmaUtilizator');
 
-    if (tabelFirme) tabelFirme.innerHTML = randMesaj(6, 'Autentifica-te pentru a vedea firmele tale.');
-    if (tabelDate) tabelDate.innerHTML = randMesaj(8, 'Selecteaza o firma pentru a vedea istoricul financiar.');
+    if (tabelFirme) tabelFirme.innerHTML = randMesaj(7, 'Autentifica-te pentru a vedea firmele tale.');
+    if (tabelDate) tabelDate.innerHTML = randMesaj(9, 'Selecteaza o firma pentru a vedea istoricul financiar.');
 
     setHtml('graficFirmaMea', '');
     setHtml('firmaMeaKpi', '');
@@ -821,7 +909,7 @@ async function comparaFirma() {
             <div class="kpi"><strong>${esc(data.firma.cod_caen || '-')}</strong><span>Cod CAEN</span></div>
             <div class="kpi"><strong>${esc(data.scor_competitiv || '-')}</strong><span>Scor competitiv / 100</span></div>
             <div class="kpi"><strong>${data.pozitie_piata ? '#' + numar(data.pozitie_piata) : calculeazaPozitionare(rows)}</strong><span>Pozitie dupa cifra de afaceri</span></div>
-            <div class="kpi"><strong>${categorieImmClient(data.firma.cifra_afaceri, data.firma.nr_angajati)}</strong><span>Clasificare IMM</span></div>
+            <div class="kpi kpi-imm"><strong>${categorieImmClient(data.firma.cifra_afaceri, data.firma.nr_angajati)}</strong><span>Clasificare IMM</span></div>
         `);
 
         renderPozitiiComparatie(indicatori, piata.numar_firme_piata);
@@ -1128,7 +1216,7 @@ async function genereazaDiagnostic() {
     const cui = val('diagnosticCui');
 
     if (!cui) {
-        setHtml('tabelDiagnosticIndicatori', randMesaj(5, 'Introdu CUI-ul firmei.'));
+        setHtml('tabelDiagnosticIndicatori', randMesaj(4, 'Introdu CUI-ul firmei.'));
         return;
     }
 
@@ -1136,8 +1224,8 @@ async function genereazaDiagnostic() {
         const data = await api(`/api/diagnostic-financiar?cui=${encodeURIComponent(cui)}`);
         renderDiagnostic(data);
     } catch (err) {
-        setHtml('tabelDiagnosticIndicatori', randMesaj(5, err.message));
-        setText('diagnosticInterpretare', err.message);
+        setHtml('tabelDiagnosticIndicatori', randMesaj(4, err.message));
+        setHtml('diagnosticInterpretare', `<p>${esc(err.message)}</p>`);
     }
 }
 
@@ -1145,7 +1233,7 @@ async function genereazaDiagnosticFirmaUtilizator() {
     const id = state.firmaSelectataId || val('firmaComparatie') || val('idFirmaDate');
 
     if (!id) {
-        setHtml('tabelDiagnosticIndicatori', randMesaj(5, 'Selecteaza o firma din contul tau.'));
+        setHtml('tabelDiagnosticIndicatori', randMesaj(4, 'Selecteaza o firma din contul tau.'));
         return;
     }
 
@@ -1155,8 +1243,8 @@ async function genereazaDiagnosticFirmaUtilizator() {
         const data = await api(`/api/diagnostic-firma-utilizator?id_firma=${encodeURIComponent(id)}`);
         renderDiagnostic(data);
     } catch (err) {
-        setHtml('tabelDiagnosticIndicatori', randMesaj(5, err.message));
-        setText('diagnosticInterpretare', err.message);
+        setHtml('tabelDiagnosticIndicatori', randMesaj(4, err.message));
+        setHtml('diagnosticInterpretare', `<p>${esc(err.message)}</p>`);
     }
 }
 
@@ -1168,7 +1256,7 @@ function renderDiagnostic(data) {
         <div class="kpi"><strong>${data.scoruri.profitabilitate}/100</strong><span>Profitabilitate</span></div>
         <div class="kpi"><strong>${data.scoruri.eficienta}/100</strong><span>Eficienta</span></div>
         <div class="kpi"><strong>${data.scoruri.risc}/100</strong><span>Stabilitate / risc</span></div>
-        <div class="kpi"><strong>${esc(categorieImm)}</strong><span>Clasificare IMM</span></div>
+        <div class="kpi kpi-imm"><strong>${esc(categorieImm)}</strong><span>Clasificare IMM</span></div>
     `);
 
     const indicatori = [
@@ -1188,7 +1276,6 @@ function renderDiagnostic(data) {
         <tr>
             <td>${esc(row.nume)}</td>
             <td>${row.procent ? procent(row.valoare) : row.formatat}</td>
-            <td>${row.medie === null || row.medie === undefined ? '-' : (row.procent ? procent(row.medie) : numar(row.medie))}</td>
             <td><span class="status-badge ${row.clasa}">${esc(row.status)}</span></td>
             <td>${esc(row.explicatie)}</td>
         </tr>
@@ -1524,9 +1611,23 @@ async function genereazaRaportFirma() {
         const firma = state.firmeUtilizator.find(item => String(item.id_firma) === String(id)) || {};
         const istoric = await api(`/api/date-firma-utilizator?id_firma=${encodeURIComponent(id)}`);
         const diagnostic = await api(`/api/diagnostic-firma-utilizator?id_firma=${encodeURIComponent(id)}`);
-        const an = istoric.length ? istoric[istoric.length - 1].an : 2024;
-        const comparatie = await api(`/api/comparatie?id_firma=${encodeURIComponent(id)}&an=${encodeURIComponent(an)}`);
+        const anDiagnostic = diagnostic.an_analiza || (istoric.length ? istoric[istoric.length - 1].an : 2024);
+        const aniComparabili = istoric
+            .map(row => Number(row.an))
+            .filter(an => ANI_RAPORTARE.includes(an))
+            .sort((a, b) => b - a);
+        const anComparatie = aniComparabili[0] || 2024;
+        let comparatie = null;
         let previziune = null;
+
+        try {
+            comparatie = await api(`/api/comparatie?id_firma=${encodeURIComponent(id)}&an=${encodeURIComponent(anComparatie)}`);
+        } catch (err) {
+            comparatie = {
+                mesaj: `Comparatia cu piata nu a putut fi calculata pentru anii disponibili. ${err.message}`,
+                an_comparatie: anComparatie
+            };
+        }
 
         try {
             previziune = await api(`/api/previziune-firma-utilizator?id_firma=${encodeURIComponent(id)}`);
@@ -1540,17 +1641,18 @@ async function genereazaRaportFirma() {
             diagnostic,
             comparatie,
             previziune,
-            an
+            an: anDiagnostic,
+            an_comparatie: anComparatie
         };
 
         setHtml('raportPreview', renderRaportCompletFirma(raport));
         adaugaRaport('Raport complet firma', [{
             firma: firma.denumire_firma || diagnostic.firma?.denumire_firma,
             cui: firma.cui || diagnostic.firma?.cui,
-            an_analiza: an,
+            an_analiza: anDiagnostic,
             scor_general: diagnostic.scoruri?.general,
             categorie_diagnostic: diagnostic.scoruri?.categorie,
-            scor_competitiv: comparatie.scor_competitiv,
+            scor_competitiv: comparatie?.scor_competitiv || '-',
             categorie_imm: categorieImmClient(diagnostic.indicatori?.cifra_afaceri, diagnostic.indicatori?.nr_angajati)
         }]);
     } catch (err) {
@@ -1580,7 +1682,7 @@ function renderRaportCompletFirma(raport) {
                 <div class="kpi"><strong>${esc(firma.denumire_firma || '-')}</strong><span>Denumire</span></div>
                 <div class="kpi"><strong>${esc(firma.cui || '-')}</strong><span>CUI</span></div>
                 <div class="kpi"><strong>${esc(firma.cod_caen || '-')}</strong><span>Cod CAEN</span></div>
-                <div class="kpi"><strong>${esc(categorieImm)}</strong><span>Clasificare IMM</span></div>
+                <div class="kpi kpi-imm"><strong>${esc(categorieImm)}</strong><span>Clasificare IMM</span></div>
             </div>
         </article>
 
@@ -1603,8 +1705,8 @@ function renderRaportCompletFirma(raport) {
 
         <article>
             <h3>4. Comparatie cu piata CAEN</h3>
-            <p>Scor competitiv: <strong>${esc(comparatie.scor_competitiv || '-')}</strong> / 100. Pozitie estimata dupa cifra de afaceri: <strong>${comparatie.pozitie_piata ? '#' + numar(comparatie.pozitie_piata) : '-'}</strong>.</p>
-            ${raportTable(comparatie.indicatori_comparatie || [], ['eticheta', 'firma', 'piata', 'diferenta', 'interpretare'])}
+            <p>An comparatie piata: <strong>${esc(raport.an_comparatie || '-')}</strong>. Scor competitiv: <strong>${esc(comparatie.scor_competitiv || '-')}</strong> / 100. Pozitie estimata dupa cifra de afaceri: <strong>${comparatie.pozitie_piata ? '#' + numar(comparatie.pozitie_piata) : '-'}</strong>.</p>
+            ${comparatie.mesaj ? `<p>${esc(comparatie.mesaj)}</p>` : raportTable(comparatie.indicatori_comparatie || [], ['eticheta', 'firma', 'piata', 'diferenta', 'interpretare'])}
         </article>
 
         <article>
@@ -1647,7 +1749,7 @@ function actualizeazaRaport() {
     if (!el) return;
 
     if (!state.raport.length) {
-        el.innerHTML = '<p>Nu exista rezultate in raport. Incarca mai intai diagnostic, comparatie, previziune, dashboard sau analize.</p>';
+        el.innerHTML = '<p>Nu exista rezultate in raport. Pentru forma finala, selecteaza o firma si foloseste butonul Raport complet firma.</p>';
         return;
     }
 

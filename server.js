@@ -232,8 +232,8 @@ function valideazaFirmaUtilizator(body, id_utilizator) {
 function valideazaDateFinanciare(body) {
     const an = Number(body.an);
 
-    if (!Number.isInteger(an) || an < 1990 || an > 2100) {
-        throw eroareClient('Anul trebuie sa fie valid, intre 1990 si 2100.');
+    if (!Number.isInteger(an) || an < AN_MIN || an > AN_MAX) {
+        throw eroareClient(`Anul trebuie sa fie intre ${AN_MIN} si ${AN_MAX}, pentru a ramane comparabil cu baza financiara oficiala.`);
     }
 
     const id_firma = Number(body.id_firma);
@@ -248,7 +248,7 @@ function valideazaDateFinanciare(body) {
         throw eroareClient('Numarul de angajati trebuie sa fie numar intreg.');
     }
 
-    return {
+    const date = {
         id_firma,
         an,
         cifra_afaceri: numarObligatoriu(body.cifra_afaceri, 'Cifra de afaceri'),
@@ -259,6 +259,16 @@ function valideazaDateFinanciare(body) {
         active_totale: numarObligatoriu(body.active_totale, 'Activele totale'),
         nr_angajati
     };
+
+    if (date.datorii > 0 && date.active_totale <= 0) {
+        throw eroareClient('Activele totale trebuie sa fie mai mari decat 0 daca firma are datorii.');
+    }
+
+    if (date.venituri_totale > 0 && date.cheltuieli_totale > date.venituri_totale * 3) {
+        throw eroareClient('Cheltuielile totale par disproportionat de mari fata de venituri. Verifica valorile introduse.');
+    }
+
+    return date;
 }
 
 /* QUERY HELPERS */
@@ -341,6 +351,107 @@ async function obtinePiataCaen(cod_caen, an) {
     });
 
     return rows[0] || null;
+}
+
+async function obtineComparatieCaenRapida(cod_caen, an, firmaAnalizata) {
+    if (!cod_caen || !an) {
+        return {
+            piata: null,
+            pozitii_piata: {},
+            top_caen: []
+        };
+    }
+
+    const valori = {
+        an,
+        cod_caen,
+        cifra_afaceri: numar(firmaAnalizata.cifra_afaceri),
+        profit_net: numar(firmaAnalizata.profit_net),
+        marja_profitului: numar(firmaAnalizata.marja_profitului),
+        productivitate_angajat: numar(firmaAnalizata.productivitate_angajat),
+        grad_indatorare: numar(firmaAnalizata.grad_indatorare)
+    };
+
+    const queryBaza = `
+        FROM date_financiare d
+        JOIN firme f
+            ON d.cui::BIGINT = f.cui
+        JOIN firme_caen fc
+            ON f.nr_inregistrare = fc.nr_inregistrare
+        WHERE d.an = :an
+          AND fc.cod_caen = :cod_caen
+    `;
+
+    const [statisticiPromise, topPromise] = await Promise.all([
+        sequelize.query(`
+            WITH piata AS (
+                SELECT DISTINCT
+                    f.cui,
+                    d.cifra_afaceri,
+                    d.profit_net,
+                    d.nr_angajati,
+                    ((d.profit_net / NULLIF(d.cifra_afaceri, 0)) * 100) AS marja_profitului,
+                    ((d.cheltuieli_totale / NULLIF(d.venituri_totale, 0)) * 100) AS rata_cheltuieli,
+                    (d.cifra_afaceri / NULLIF(d.nr_angajati, 0)) AS productivitate_angajat,
+                    ((d.datorii / NULLIF(d.active_imobilizate + d.active_circulante, 0)) * 100) AS grad_indatorare
+                ${queryBaza}
+            )
+            SELECT
+                COUNT(*) AS numar_firme_piata,
+                AVG(cifra_afaceri) AS medie_cifra_afaceri,
+                AVG(profit_net) AS medie_profit_net,
+                AVG(nr_angajati) AS medie_angajati,
+                AVG(marja_profitului) AS medie_marja_profit,
+                AVG(rata_cheltuieli) AS medie_rata_cheltuieli,
+                AVG(productivitate_angajat) AS medie_productivitate,
+                AVG(grad_indatorare) AS medie_grad_indatorare,
+                COUNT(*) FILTER (WHERE cifra_afaceri > :cifra_afaceri) + 1 AS pozitie_cifra_afaceri,
+                COUNT(*) FILTER (WHERE profit_net > :profit_net) + 1 AS pozitie_profit_net,
+                COUNT(*) FILTER (WHERE marja_profitului > :marja_profitului) + 1 AS pozitie_marja_profitului,
+                COUNT(*) FILTER (WHERE productivitate_angajat > :productivitate_angajat) + 1 AS pozitie_productivitate_angajat,
+                COUNT(*) FILTER (WHERE grad_indatorare < :grad_indatorare) + 1 AS pozitie_grad_indatorare
+            FROM piata
+        `, {
+            replacements: valori
+        }),
+        sequelize.query(`
+            SELECT
+                ROW_NUMBER() OVER (ORDER BY d.cifra_afaceri DESC NULLS LAST) AS pozitie,
+                f.denumire_firma,
+                f.cui,
+                f.judet,
+                f.localitate,
+                d.cifra_afaceri,
+                d.profit_net,
+                d.nr_angajati,
+                ROUND((d.profit_net / NULLIF(d.cifra_afaceri, 0)) * 100, 2) AS marja_profitului,
+                ROUND((d.cifra_afaceri / NULLIF(d.nr_angajati, 0)), 2) AS productivitate_angajat,
+                ROUND((d.datorii / NULLIF(d.active_imobilizate + d.active_circulante, 0)) * 100, 2) AS grad_indatorare
+            ${queryBaza}
+              AND d.cifra_afaceri IS NOT NULL
+            ORDER BY d.cifra_afaceri DESC NULLS LAST
+            LIMIT 10
+        `, {
+            replacements: {
+                an,
+                cod_caen
+            }
+        })
+    ]);
+
+    const statistici = statisticiPromise[0][0] || {};
+
+    return {
+        piata: statistici,
+        top_caen: topPromise[0],
+        pozitii_piata: {
+            cifra_afaceri: valori.cifra_afaceri === null ? null : Number(statistici.pozitie_cifra_afaceri || 0) || null,
+            profit_net: valori.profit_net === null ? null : Number(statistici.pozitie_profit_net || 0) || null,
+            marja_profitului: valori.marja_profitului === null ? null : Number(statistici.pozitie_marja_profitului || 0) || null,
+            productivitate_angajat: valori.productivitate_angajat === null ? null : Number(statistici.pozitie_productivitate_angajat || 0) || null,
+            grad_indatorare: valori.grad_indatorare === null ? null : Number(statistici.pozitie_grad_indatorare || 0) || null
+        }
+    };
 }
 
 async function verificaUnicitateFirmaUtilizator(firma) {
@@ -675,39 +786,23 @@ async function pregatesteTabeleGestiune() {
 }
 
 async function pregatesteIndexuriCautare() {
-    try {
-        await sequelize.query(`CREATE EXTENSION IF NOT EXISTS pg_trgm;`);
-        await sequelize.query(`CREATE INDEX IF NOT EXISTS idx_firme_denumire_trgm ON firme USING gin (denumire_firma gin_trgm_ops);`);
-        await sequelize.query(`CREATE INDEX IF NOT EXISTS idx_firme_localitate_trgm ON firme USING gin (localitate gin_trgm_ops);`);
-        await sequelize.query(`CREATE INDEX IF NOT EXISTS idx_firme_judet_trgm ON firme USING gin (judet gin_trgm_ops);`);
-        await sequelize.query(`CREATE INDEX IF NOT EXISTS idx_firme_forma_trgm ON firme USING gin (forma_juridica gin_trgm_ops);`);
-    } catch (err) {
-        console.warn('Indexurile pg_trgm nu au putut fi create. Cautarea text poate fi mai lenta.', err.message);
+    const indexuriPornire = [
+        `CREATE INDEX IF NOT EXISTS idx_firme_utilizator_owner ON firme_utilizator (id_utilizator);`,
+        `CREATE INDEX IF NOT EXISTS idx_firme_utilizator_cui ON firme_utilizator (cui);`,
+        `CREATE INDEX IF NOT EXISTS idx_date_user_firma_an ON date_financiare_utilizator (id_firma, an);`
+    ];
+
+    for (const sql of indexuriPornire) {
+        try {
+            await sequelize.query(sql);
+        } catch (err) {
+            console.warn('Un index auxiliar nu a putut fi verificat la pornire.', err.message);
+        }
     }
+}
 
-    await sequelize.query(`CREATE INDEX IF NOT EXISTS idx_firme_cui ON firme (cui);`);
-    await sequelize.query(`CREATE INDEX IF NOT EXISTS idx_firme_nr_inregistrare ON firme (nr_inregistrare);`);
-    await sequelize.query(`CREATE INDEX IF NOT EXISTS idx_firme_caen_nr ON firme_caen (nr_inregistrare);`);
-    await sequelize.query(`CREATE INDEX IF NOT EXISTS idx_firme_caen_cod ON firme_caen (cod_caen);`);
-    await sequelize.query(`CREATE INDEX IF NOT EXISTS idx_date_financiare_cui ON date_financiare (cui);`);
-    await sequelize.query(`CREATE INDEX IF NOT EXISTS idx_date_financiare_an ON date_financiare (an);`);
-    await sequelize.query(`CREATE INDEX IF NOT EXISTS idx_firme_utilizator_owner ON firme_utilizator (id_utilizator);`);
-    await sequelize.query(`CREATE INDEX IF NOT EXISTS idx_date_user_firma_an ON date_financiare_utilizator (id_firma, an);`);
-
-    try {
-        await sequelize.query(`
-            CREATE UNIQUE INDEX IF NOT EXISTS idx_firme_utilizator_cui_unic
-            ON firme_utilizator (cui)
-            WHERE cui IS NOT NULL;
-        `);
-
-        await sequelize.query(`
-            CREATE UNIQUE INDEX IF NOT EXISTS idx_date_user_firma_an_unic
-            ON date_financiare_utilizator (id_firma, an);
-        `);
-    } catch (err) {
-        console.warn('Unele indexuri unice nu au putut fi create. Verifica daca exista duplicate deja introduse.', err.message);
-    }
+async function curataSesiuniLaPornire() {
+    await sequelize.query(`DELETE FROM sesiuni_utilizator;`);
 }
 
 /* AUTENTIFICARE */
@@ -1145,6 +1240,37 @@ app.get('/api/firme-utilizator', autentifica, async (req, res) => {
     }
 });
 
+app.delete('/api/firma-utilizator/:id_firma', autentifica, async (req, res) => {
+    const id_firma = Number(req.params.id_firma);
+
+    if (!Number.isInteger(id_firma) || id_firma <= 0) {
+        return res.status(400).json({ mesaj: 'ID-ul firmei este invalid.' });
+    }
+
+    try {
+        const firma = await verificaFirmaUtilizator(id_firma, req.utilizator.id_utilizator);
+
+        if (!firma) {
+            return res.status(404).json({ mesaj: 'Firma nu exista sau nu iti apartine.' });
+        }
+
+        await sequelize.query(`
+            DELETE FROM firme_utilizator
+            WHERE id_firma = :id_firma
+              AND id_utilizator = :id_utilizator
+        `, {
+            replacements: {
+                id_firma,
+                id_utilizator: req.utilizator.id_utilizator
+            }
+        });
+
+        res.json({ mesaj: 'Firma si datele financiare asociate au fost sterse.' });
+    } catch (err) {
+        trimiteEroare(res, err, 'Eroare la stergerea firmei.');
+    }
+});
+
 app.get('/api/date-firma-utilizator', autentifica, async (req, res) => {
     const id_firma = req.query.id_firma;
 
@@ -1220,6 +1346,45 @@ app.post('/api/date-firma-utilizator', autentifica, async (req, res) => {
         res.json({ mesaj: 'Datele financiare au fost salvate pentru analiza proprie.' });
     } catch (err) {
         trimiteEroare(res, err, 'Eroare la salvarea datelor financiare.');
+    }
+});
+
+app.delete('/api/date-firma-utilizator/:id_date', autentifica, async (req, res) => {
+    const id_date = Number(req.params.id_date);
+
+    if (!Number.isInteger(id_date) || id_date <= 0) {
+        return res.status(400).json({ mesaj: 'ID-ul randului financiar este invalid.' });
+    }
+
+    try {
+        const [randuri] = await sequelize.query(`
+            SELECT dfu.id_date, dfu.an
+            FROM date_financiare_utilizator dfu
+            JOIN firme_utilizator fu ON fu.id_firma = dfu.id_firma
+            WHERE dfu.id_date = :id_date
+              AND fu.id_utilizator = :id_utilizator
+            LIMIT 1
+        `, {
+            replacements: {
+                id_date,
+                id_utilizator: req.utilizator.id_utilizator
+            }
+        });
+
+        if (randuri.length === 0) {
+            return res.status(404).json({ mesaj: 'Anul financiar nu exista sau nu iti apartine.' });
+        }
+
+        await sequelize.query(`
+            DELETE FROM date_financiare_utilizator
+            WHERE id_date = :id_date
+        `, {
+            replacements: { id_date }
+        });
+
+        res.json({ mesaj: `Datele financiare pentru anul ${randuri[0].an} au fost sterse.` });
+    } catch (err) {
+        trimiteEroare(res, err, 'Eroare la stergerea anului financiar.');
     }
 });
 
@@ -1354,80 +1519,10 @@ app.get('/api/comparatie', autentifica, async (req, res) => {
             grad_indatorare: rotunjeste(Number(firma[0].active_totale) ? (Number(firma[0].datorii || 0) / Number(firma[0].active_totale)) * 100 : null)
         };
 
-        const piata = await obtinePiataCaen(firmaAnalizata.cod_caen, an);
-        let top_caen = [];
-        let pozitii_piata = {};
-
-        if (firmaAnalizata.cod_caen) {
-            const [topRows] = await sequelize.query(`
-                SELECT
-                    ROW_NUMBER() OVER (ORDER BY d.cifra_afaceri DESC NULLS LAST) AS pozitie,
-                    f.denumire_firma,
-                    f.cui,
-                    f.judet,
-                    f.localitate,
-                    d.cifra_afaceri,
-                    d.profit_net,
-                    d.nr_angajati,
-                    ROUND((d.profit_net / NULLIF(d.cifra_afaceri, 0)) * 100, 2) AS marja_profitului,
-                    ROUND((d.cifra_afaceri / NULLIF(d.nr_angajati, 0)), 2) AS productivitate_angajat,
-                    ROUND((d.datorii / NULLIF(d.active_imobilizate + d.active_circulante, 0)) * 100, 2) AS grad_indatorare
-                FROM date_financiare d
-                JOIN firme f
-                    ON d.cui::BIGINT = f.cui
-                JOIN firme_caen fc
-                    ON f.nr_inregistrare = fc.nr_inregistrare
-                WHERE d.an = :an
-                  AND fc.cod_caen = :cod_caen
-                  AND d.cifra_afaceri IS NOT NULL
-                ORDER BY d.cifra_afaceri DESC NULLS LAST
-                LIMIT 10
-            `, {
-                replacements: {
-                    an,
-                    cod_caen: firmaAnalizata.cod_caen
-                }
-            });
-
-            top_caen = topRows;
-
-            const pozitiiConfig = [
-                { key: 'cifra_afaceri', expresie: 'd.cifra_afaceri', valoare: firmaAnalizata.cifra_afaceri, sens: 'desc' },
-                { key: 'profit_net', expresie: 'd.profit_net', valoare: firmaAnalizata.profit_net, sens: 'desc' },
-                { key: 'marja_profitului', expresie: '((d.profit_net / NULLIF(d.cifra_afaceri, 0)) * 100)', valoare: firmaAnalizata.marja_profitului, sens: 'desc' },
-                { key: 'productivitate_angajat', expresie: '(d.cifra_afaceri / NULLIF(d.nr_angajati, 0))', valoare: firmaAnalizata.productivitate_angajat, sens: 'desc' },
-                { key: 'grad_indatorare', expresie: '((d.datorii / NULLIF(d.active_imobilizate + d.active_circulante, 0)) * 100)', valoare: firmaAnalizata.grad_indatorare, sens: 'asc' }
-            ];
-
-            for (const item of pozitiiConfig) {
-                if (item.valoare === null || item.valoare === undefined || !Number.isFinite(Number(item.valoare))) {
-                    pozitii_piata[item.key] = null;
-                    continue;
-                }
-
-                const comparator = item.sens === 'asc' ? '<' : '>';
-                const [pozitieRows] = await sequelize.query(`
-                    SELECT COUNT(DISTINCT f.cui) + 1 AS pozitie
-                    FROM date_financiare d
-                    JOIN firme f
-                        ON d.cui::BIGINT = f.cui
-                    JOIN firme_caen fc
-                        ON f.nr_inregistrare = fc.nr_inregistrare
-                    WHERE d.an = :an
-                      AND fc.cod_caen = :cod_caen
-                      AND ${item.expresie} IS NOT NULL
-                      AND ${item.expresie} ${comparator} :valoare
-                `, {
-                    replacements: {
-                        an,
-                        cod_caen: firmaAnalizata.cod_caen,
-                        valoare: item.valoare
-                    }
-                });
-
-                pozitii_piata[item.key] = Number(pozitieRows[0]?.pozitie || 0) || null;
-            }
-        }
+        const analizaCaen = await obtineComparatieCaenRapida(firmaAnalizata.cod_caen, an, firmaAnalizata);
+        const piata = analizaCaen.piata;
+        const top_caen = analizaCaen.top_caen;
+        const pozitii_piata = analizaCaen.pozitii_piata;
 
         const indicatori_comparatie = [
             {
@@ -1956,6 +2051,7 @@ async function startServer() {
     try {
         await sequelize.authenticate();
         await pregatesteTabeleGestiune();
+        await curataSesiuniLaPornire();
         await pregatesteIndexuriCautare();
 
         console.log('Conectat la baza de date');
