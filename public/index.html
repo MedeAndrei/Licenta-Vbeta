@@ -1,9 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ro">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem informatic IMM</title>
+    <title>IMM Atlas | Analiza financiara</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="shortcut icon" href="/favicon.svg">
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -49,7 +51,7 @@
             <button class="nav" data-page="topuri">Top firme</button>
             <button class="nav" data-page="sector">Analiza sectoriala</button>
             <button class="nav" data-page="dashboard" data-load="dashboard">Dashboard</button>
-            <button class="nav" data-page="clasificare" data-load="clasificare">Clasificare IMM</button>
+            <button class="nav" data-page="clasificare" data-load="clasificare">Clasificare firme</button>
             <button class="nav" data-page="rapoarte" data-load="raport">Rapoarte</button>
         </nav>
     </aside>
@@ -59,7 +61,7 @@
             <div>
                 <span class="eyebrow">IMM Atlas</span>
                 <h1>Sistem informatic de gestiune si analiza financiara pentru IMM-uri</h1>
-                <p>Aplicatie pentru cautare firme, gestiune date proprii, analiza financiara, diagnostic automat, comparatii sectoriale si rapoarte economice.</p>
+                <p>Analiza financiara clara. Pozitionare reala in piata.</p>
             </div>
 
             <div class="hero-stats">
@@ -81,7 +83,7 @@
         <section id="cautare" class="pagina activa">
             <div class="page-title">
                 <h2>Cautare firme</h2>
-                <p>Cauta firme publice dupa denumire, CUI, localitate, judet, forma juridica sau cod CAEN.</p>
+                <p>Registrul firmelor si al activitatilor CAEN.</p>
             </div>
 
             <div class="panel">
@@ -118,7 +120,7 @@
                         </tr>
                         </thead>
                         <tbody id="tabelFirme">
-                        <tr><td colspan="8" class="empty">Cauta o firma pentru a vedea rezultatele.</td></tr>
+                        <tr><td colspan="8" class="empty">Nicio cautare efectuata</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -134,21 +136,21 @@
         <section id="introducere" class="pagina">
             <div class="page-title">
                 <h2>Firma mea</h2>
-                <p>Gestioneaza firme proprii si date financiare separate de baza oficiala.</p>
+                <p>Portofoliul si istoricul financiar al firmelor tale.</p>
             </div>
 
             <div class="panel">
                 <div class="section-head">
                     <div>
                         <h3>Lista firmelor mele</h3>
-                        <p>Selecteaza o firma pentru completarea datelor financiare, diagnostic si comparatii.</p>
+                        <p>Selecteaza firma pe care vrei sa o analizezi.</p>
                     </div>
                     <button id="btnDiagnosticFirmaMea" type="button" class="secondary">Diagnostic firma mea</button>
                 </div>
 
                 <div class="selected-company">
                     <strong>Firma selectata</strong>
-                    <span id="firmaSelectataText">Nu este selectata nicio firma.</span>
+                    <span id="firmaSelectataText">Nicio firma selectata</span>
                 </div>
 
                 <div class="table-wrap">
@@ -165,7 +167,7 @@
                         </tr>
                         </thead>
                         <tbody id="tabelFirmeUtilizator">
-                        <tr><td colspan="7" class="empty">Autentifica-te pentru a vedea firmele tale.</td></tr>
+                        <tr><td colspan="7" class="empty">Portofoliul este disponibil dupa autentificare</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -276,7 +278,7 @@
                         </tr>
                         </thead>
                         <tbody id="tabelDateFirmaUtilizator">
-                        <tr><td colspan="9" class="empty">Selecteaza o firma pentru a vedea istoricul financiar.</td></tr>
+                        <tr><td colspan="9" class="empty">Nicio firma selectata</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -286,7 +288,7 @@
         <section id="analiza" class="pagina">
             <div class="page-title">
                 <h2>Analiza financiara</h2>
-                <p>Cauta firme cu date financiare oficiale si analizeaza evolutia indicatorilor pe ani.</p>
+                <p>Evolutia financiara si operationala, prezentata pe ani.</p>
             </div>
 
             <div class="panel">
@@ -320,7 +322,7 @@
                         </tr>
                         </thead>
                         <tbody id="tabelFirmeFinanciare">
-                        <tr><td colspan="6" class="empty">Cauta o firma pentru analiza financiara.</td></tr>
+                        <tr><td colspan="6" class="empty">Nicio cautare efectuata</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -336,7 +338,7 @@
                 <h3>Indicatori financiari</h3>
                 <div id="graficAnaliza" class="chart"></div>
                 <div id="concluziiAnaliza" class="diagnostic-box compact-box">
-                    Selecteaza o firma pentru concluzii automate pe baza evolutiei.
+                    Nicio analiza selectata
                 </div>
 
                 <div class="table-wrap">
@@ -354,7 +356,7 @@
                         </tr>
                         </thead>
                         <tbody id="tabelAnaliza">
-                        <tr><td colspan="8" class="empty">Selecteaza o firma din rezultatele cautarii.</td></tr>
+                        <tr><td colspan="8" class="empty">Nicio firma selectata</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -364,7 +366,7 @@
         <section id="diagnostic" class="pagina">
             <div class="page-title">
                 <h2>Diagnostic financiar</h2>
-                <p>Genereaza diagnostic financiar pentru firme publice sau pentru firma proprie selectata.</p>
+                <p>Scoruri, riscuri si recomandari bazate pe date financiare.</p>
             </div>
 
             <div class="grid two">
@@ -378,7 +380,7 @@
 
                 <div class="panel">
                     <h3>Firma mea</h3>
-                    <p class="muted">Pentru firma proprie, selecteaza firma in pagina Firma mea, apoi foloseste butonul Diagnostic firma mea.</p>
+                    <p class="muted">Este utilizata firma selectata din portofoliul tau.</p>
                 </div>
             </div>
 
@@ -406,7 +408,7 @@
                             </tr>
                             </thead>
                             <tbody id="tabelDiagnosticIndicatori">
-                            <tr><td colspan="4" class="empty">Genereaza un diagnostic pentru a vedea indicatorii.</td></tr>
+                            <tr><td colspan="4" class="empty">Niciun diagnostic generat</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -415,7 +417,7 @@
                 <div class="panel">
                     <h3>Interpretare</h3>
                     <div id="diagnosticInterpretare" class="diagnostic-box">
-                        Rezultatul diagnosticului va include explicarea scorurilor, concluzii, puncte forte, riscuri si recomandari.
+                        Niciun diagnostic generat
                     </div>
                 </div>
             </div>
@@ -429,7 +431,7 @@
         <section id="comparatii" class="pagina">
             <div class="page-title">
                 <h2>Compara firma</h2>
-                <p>Compara firma ta cu media pietei si urmareste pozitionarea fata de firmele din acelasi cod CAEN.</p>
+                <p>Pozitionare competitiva fata de media si liderii sectorului CAEN.</p>
             </div>
 
             <div class="panel">
@@ -454,7 +456,7 @@
                         </tr>
                         </thead>
                         <tbody id="tabelComparatie">
-                        <tr><td colspan="4" class="empty">Alege firma si anul pentru comparatie.</td></tr>
+                        <tr><td colspan="4" class="empty">Nicio comparatie generata</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -475,7 +477,7 @@
                         </tr>
                         </thead>
                         <tbody id="tabelTopComparatie">
-                        <tr><td colspan="7" class="empty">Ruleaza comparatia pentru a vedea topul CAEN.</td></tr>
+                        <tr><td colspan="7" class="empty">Topul CAEN nu este incarcat</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -494,7 +496,7 @@
                                 </tr>
                                 </thead>
                                 <tbody id="tabelPozitiiComparatie">
-                                <tr><td colspan="4" class="empty">Ruleaza comparatia pentru pozitionare.</td></tr>
+                                <tr><td colspan="4" class="empty">Pozitionarea nu este calculata</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -512,7 +514,7 @@
                                 </tr>
                                 </thead>
                                 <tbody id="tabelConcluziiComparatie">
-                                <tr><td colspan="3" class="empty">Ruleaza comparatia pentru recomandari.</td></tr>
+                                <tr><td colspan="3" class="empty">Nicio recomandare disponibila</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -524,7 +526,7 @@
         <section id="previziune" class="pagina">
             <div class="page-title">
                 <h2>Previziune financiara</h2>
-                <p>Estimeaza evolutia firmei pentru anul urmator folosind ritmul mediu anual de crestere si scenarii simple.</p>
+                <p>Proiectii pentru anul urmator in trei scenarii.</p>
             </div>
 
             <div class="panel">
@@ -552,7 +554,7 @@
                                 </tr>
                                 </thead>
                                 <tbody id="tabelPreviziune">
-                                <tr><td colspan="6" class="empty">Selecteaza firma si calculeaza previziunea.</td></tr>
+                                <tr><td colspan="6" class="empty">Nicio previziune calculata</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -561,7 +563,7 @@
                     <div>
                         <h3>Interpretare</h3>
                         <div id="previziuneInterpretare" class="diagnostic-box">
-                            Previziunea va explica trendul cifrei de afaceri, profitului, datoriilor si posibila schimbare a categoriei IMM.
+                            Nicio previziune calculata
                         </div>
                     </div>
                 </div>
@@ -571,7 +573,7 @@
         <section id="topuri" class="pagina">
             <div class="page-title">
                 <h2>Top firme</h2>
-                <p>Genereaza clasamente dupa indicatori financiari si operationali.</p>
+                <p>Clasamente nationale dupa performanta financiara.</p>
             </div>
 
             <div class="panel">
@@ -611,7 +613,7 @@
                         </tr>
                         </thead>
                         <tbody id="tabelTop">
-                        <tr><td colspan="9" class="empty">Alege criteriul pentru top.</td></tr>
+                        <tr><td colspan="9" class="empty">Niciun clasament generat</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -621,7 +623,7 @@
         <section id="sector" class="pagina">
             <div class="page-title">
                 <h2>Analiza sectoriala</h2>
-                <p>Compara unul sau mai multe sectoare CAEN dupa volum, profitabilitate, risc si productivitate.</p>
+                <p>Performanta si riscul sectoarelor CAEN.</p>
             </div>
 
             <div class="panel">
@@ -635,7 +637,7 @@
                 <div id="sectorKpi" class="kpi-grid"></div>
                 <div id="graficSector" class="chart"></div>
                 <div id="sectorInterpretare" class="diagnostic-box compact-box">
-                    Introdu unul sau mai multe coduri CAEN pentru comparatie sectoriala.
+                    Nicio analiza sectoriala generata
                 </div>
 
                 <div class="table-wrap">
@@ -655,7 +657,7 @@
                         </tr>
                         </thead>
                         <tbody id="tabelSector">
-                        <tr><td colspan="10" class="empty">Ruleaza analiza sectoriala.</td></tr>
+                        <tr><td colspan="10" class="empty">Nicio analiza sectoriala generata</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -665,7 +667,7 @@
         <section id="dashboard" class="pagina">
             <div class="page-title">
                 <h2>Dashboard</h2>
-                <p>Privire sintetica asupra indicatorilor economici pe an, judet si coduri CAEN.</p>
+                <p>Imagine de ansamblu asupra economiei selectate.</p>
             </div>
 
             <div class="panel">
@@ -737,13 +739,13 @@
 
         <section id="clasificare" class="pagina">
             <div class="page-title">
-                <h2>Clasificare IMM</h2>
-                <p>Vezi distributia firmelor pe categorii IMM si incadreaza rapid o firma dupa praguri.</p>
+                <h2>Clasificare firme</h2>
+                <p>Distributia firmelor pe categorii de dimensiune.</p>
             </div>
 
             <div class="grid two">
                 <div class="panel">
-                    <h3>Distributie IMM</h3>
+                    <h3>Distributie firme</h3>
                     <div class="filters compact">
                         <select id="anClasificare" class="year-select"></select>
                         <button id="btnClasificare" type="button">Afiseaza</button>
@@ -781,7 +783,7 @@
                     </div>
                     <button id="btnClasificaFirma" type="button">Clasifica</button>
                     <div id="rezultatClasificare" class="result-box">
-                        Completeaza valorile pentru incadrare.
+                        Nicio clasificare efectuata
                     </div>
                 </div>
             </div>
@@ -790,7 +792,7 @@
         <section id="rapoarte" class="pagina">
             <div class="page-title">
                 <h2>Rapoarte</h2>
-                <p>Raportul strange ultimele rezultate generate in aplicatie si permite export CSV sau PDF.</p>
+                <p>Raport financiar consolidat, pregatit pentru export.</p>
             </div>
 
             <div class="panel">
@@ -803,7 +805,7 @@
                 </div>
 
                 <div id="raportPreview" class="report">
-                    <p>Selecteaza o firma si genereaza raportul complet pentru o forma potrivita de export PDF.</p>
+                    <p class="empty-state">Niciun raport generat</p>
                 </div>
             </div>
         </section>
@@ -813,3 +815,5 @@
 <script src="app.js"></script>
 </body>
 </html>
+
+

@@ -340,7 +340,7 @@ function renderTabelFirmeDetaliat(rows) {
                 <th>CAEN</th>
             </tr>
         `;
-        body.innerHTML = randMesaj(8, 'Nu exista rezultate.');
+        body.innerHTML = randMesaj(8, 'Niciun rezultat gasit');
         return;
     }
 
@@ -446,7 +446,7 @@ async function cautaFirmeFinanciare(page) {
                 <td>${esc(firma.coduri_caen)}</td>
                 <td>${esc(firma.primul_an)} - ${esc(firma.ultimul_an)}</td>
             </tr>
-        `).join('') || randMesaj(6, 'Nu exista rezultate.');
+        `).join('') || randMesaj(6, 'Niciun rezultat gasit');
 
         document.querySelector('#analiza .page-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
@@ -483,7 +483,7 @@ async function incarcaAnaliza(cui) {
                 <td>${procent(row.grad_indatorare)}</td>
                 <td>${procent(row.evolutie_cifra_afaceri)}</td>
             </tr>
-        `).join('') || randMesaj(8, 'Nu exista date financiare.');
+        `).join('') || randMesaj(8, 'Nu sunt disponibile date financiare');
 
         renderAnalizaCharts('graficAnaliza', data);
         renderConcluziiAnaliza(data);
@@ -496,7 +496,7 @@ async function incarcaAnaliza(cui) {
 
 function renderConcluziiAnaliza(data) {
     if (!data || data.length < 2) {
-        setHtml('concluziiAnaliza', '<p>Nu exista suficiente date pentru concluzii automate.</p>');
+        setHtml('concluziiAnaliza', '<p class="empty-state">Date insuficiente pentru concluzii</p>');
         return;
     }
 
@@ -723,7 +723,7 @@ async function stergeFirmaUtilizator(idFirma) {
             state.firmaSelectataId = null;
             setValue('idFirmaDate', '');
             setText('firmaSelectataText', 'Nu este selectata nicio firma.');
-            setHtml('tabelDateFirmaUtilizator', randMesaj(9, 'Selecteaza o firma pentru a vedea istoricul financiar.'));
+            setHtml('tabelDateFirmaUtilizator', randMesaj(9, 'Nicio firma selectata'));
             setHtml('graficFirmaMea', '');
             setHtml('firmaMeaKpi', '');
         }
@@ -784,7 +784,7 @@ async function incarcaDateFirmaUtilizator(idFirma) {
                     </button>
                 </td>
             </tr>
-        `).join('') || randMesaj(9, 'Nu exista ani introdusi pentru firma selectata.');
+        `).join('') || randMesaj(9, 'Nu sunt disponibile date financiare');
 
         tabel.querySelectorAll('[data-delete-an]').forEach(button => {
             button.addEventListener('click', () => {
@@ -834,7 +834,7 @@ function renderFirmaMeaKpi(data) {
         <div class="kpi"><strong>${esc(ultimul.an)}</strong><span>Ultimul an introdus</span></div>
         <div class="kpi"><strong>${numar(ultimul.cifra_afaceri)}</strong><span>Cifra de afaceri</span></div>
         <div class="kpi"><strong>${numar(ultimul.profit_net)}</strong><span>Profit net</span></div>
-        <div class="kpi kpi-imm"><strong>${categorieImmClient(ultimul.cifra_afaceri, ultimul.nr_angajati)}</strong><span>Incadrare IMM</span></div>
+        <div class="kpi kpi-imm"><strong>${categorieImmClient(ultimul.cifra_afaceri, ultimul.nr_angajati)}</strong><span>Categorie firma</span></div>
         <div class="kpi"><strong>${evolutieCa === null ? '-' : procent(evolutieCa)}</strong><span>Evolutie CA fata de anul anterior</span></div>
     `);
 }
@@ -847,7 +847,7 @@ function curataZonaFirmaMea() {
     const tabelDate = document.getElementById('tabelDateFirmaUtilizator');
 
     if (tabelFirme) tabelFirme.innerHTML = randMesaj(7, 'Autentifica-te pentru a vedea firmele tale.');
-    if (tabelDate) tabelDate.innerHTML = randMesaj(9, 'Selecteaza o firma pentru a vedea istoricul financiar.');
+    if (tabelDate) tabelDate.innerHTML = randMesaj(9, 'Nicio firma selectata');
 
     setHtml('graficFirmaMea', '');
     setHtml('firmaMeaKpi', '');
@@ -861,7 +861,7 @@ async function comparaFirma() {
     const tabel = document.getElementById('tabelComparatie');
 
     if (!id) {
-        tabel.innerHTML = randMesaj(4, 'Selecteaza o firma.');
+        tabel.innerHTML = randMesaj(4, 'Nicio firma selectata');
         return;
     }
 
@@ -876,8 +876,8 @@ async function comparaFirma() {
             setHtml('graficComparatie', '');
             setHtml('graficTopComparatie', '');
             setHtml('tabelTopComparatie', randMesaj(7, 'Ruleaza comparatia pentru a vedea topul CAEN.'));
-            setHtml('tabelPozitiiComparatie', randMesaj(4, 'Nu exista pozitii calculate.'));
-            setHtml('tabelConcluziiComparatie', randMesaj(3, 'Nu exista concluzii.'));
+            setHtml('tabelPozitiiComparatie', randMesaj(4, 'Pozitionarea nu este disponibila'));
+            setHtml('tabelConcluziiComparatie', randMesaj(3, 'Nicio concluzie disponibila'));
             return;
         }
 
@@ -909,7 +909,7 @@ async function comparaFirma() {
             <div class="kpi"><strong>${esc(data.firma.cod_caen || '-')}</strong><span>Cod CAEN</span></div>
             <div class="kpi"><strong>${esc(data.scor_competitiv || '-')}</strong><span>Scor competitiv / 100</span></div>
             <div class="kpi"><strong>${data.pozitie_piata ? '#' + numar(data.pozitie_piata) : calculeazaPozitionare(rows)}</strong><span>Pozitie dupa cifra de afaceri</span></div>
-            <div class="kpi kpi-imm"><strong>${categorieImmClient(data.firma.cifra_afaceri, data.firma.nr_angajati)}</strong><span>Clasificare IMM</span></div>
+            <div class="kpi kpi-imm"><strong>${categorieImmClient(data.firma.cifra_afaceri, data.firma.nr_angajati)}</strong><span>Categorie firma</span></div>
         `);
 
         renderPozitiiComparatie(indicatori, piata.numar_firme_piata);
@@ -930,7 +930,7 @@ function renderPozitiiComparatie(indicatori, totalPiata) {
             <td>${numar(totalPiata)}</td>
             <td><span class="status-badge ${clasaStatus(item.interpretare)}">${esc(item.interpretare)}</span></td>
         </tr>
-    `).join('') || randMesaj(4, 'Nu exista pozitii calculate.'));
+    `).join('') || randMesaj(4, 'Pozitionarea nu este disponibila'));
 }
 
 function renderConcluziiComparatie(indicatori, concluzii) {
@@ -947,7 +947,7 @@ function renderConcluziiComparatie(indicatori, concluzii) {
             <td>${esc(concluzii[index] || item.interpretare)}</td>
             <td>${esc(recomandari[index])}</td>
         </tr>
-    `).join('') || randMesaj(3, 'Nu exista concluzii.'));
+    `).join('') || randMesaj(3, 'Nicio concluzie disponibila'));
 }
 
 function renderTopComparatie(rows) {
@@ -964,7 +964,7 @@ function renderTopComparatie(rows) {
             <td>${numar(row.profit_net)}</td>
             <td>${procent(row.marja_profitului)}</td>
         </tr>
-    `).join('') || randMesaj(7, 'Nu exista top disponibil pentru codul CAEN selectat.');
+    `).join('') || randMesaj(7, 'Topul CAEN nu este disponibil');
 
     setHtml('graficTopComparatie', barChart(rows, 'denumire_firma', 'cifra_afaceri', 'Top firme CAEN dupa cifra de afaceri', '#1d4ed8'));
 }
@@ -995,7 +995,7 @@ async function incarcaPreviziune() {
     const tabel = document.getElementById('tabelPreviziune');
 
     if (!id) {
-        tabel.innerHTML = randMesaj(5, 'Selecteaza o firma din contul tau.');
+        tabel.innerHTML = randMesaj(5, 'Nicio firma selectata');
         return;
     }
 
@@ -1020,7 +1020,7 @@ async function incarcaPreviziune() {
                 <td>${numar(row.datorii)}</td>
                 <td>${numar(row.nr_angajati)}</td>
             </tr>
-        `).join('') || randMesaj(6, 'Nu exista scenarii calculate.');
+        `).join('') || randMesaj(6, 'Niciun scenariu calculat');
 
         setHtml('previziuneInterpretare', `
             <h4>${esc(data.firma.denumire_firma)}</h4>
@@ -1188,7 +1188,7 @@ async function incarcaClasificare() {
         `).join('') || randMesaj(5, 'Nu exista date.'));
 
         renderClasificareCharts('graficClasificare', data.distributie);
-        adaugaRaport('Clasificare IMM', data.distributie);
+        adaugaRaport('Clasificare firme', data.distributie);
     } catch (err) {
         setHtml('tabelClasificare', randMesaj(5, err.message));
     }
@@ -1256,7 +1256,7 @@ function renderDiagnostic(data) {
         <div class="kpi"><strong>${data.scoruri.profitabilitate}/100</strong><span>Profitabilitate</span></div>
         <div class="kpi"><strong>${data.scoruri.eficienta}/100</strong><span>Eficienta</span></div>
         <div class="kpi"><strong>${data.scoruri.risc}/100</strong><span>Stabilitate / risc</span></div>
-        <div class="kpi kpi-imm"><strong>${esc(categorieImm)}</strong><span>Clasificare IMM</span></div>
+        <div class="kpi kpi-imm"><strong>${esc(categorieImm)}</strong><span>Categorie firma</span></div>
     `);
 
     const indicatori = [
@@ -1409,7 +1409,7 @@ function renderSectorCharts(id, data) {
 
 function renderClasificareCharts(id, data) {
     setHtml(id, `
-        ${pieChart(data, 'categorie', 'numar_firme', 'Distributie firme pe categorii IMM')}
+        ${pieChart(data, 'categorie', 'numar_firme', 'Distributie firme pe categorii')}
         ${barChart(data, 'categorie', 'medie_cifra_afaceri', 'Cifra de afaceri medie pe categorie', '#1d4ed8')}
     `);
 }
@@ -1588,7 +1588,7 @@ function chartEmpty(title) {
     return `
         <div class="chart-block">
             <h4>${esc(title)}</h4>
-            <p>Nu exista suficiente date pentru grafic.</p>
+            <p class="empty-state">Date insuficiente pentru grafic</p>
         </div>
     `;
 }
@@ -1600,7 +1600,7 @@ async function genereazaRaportFirma() {
     const el = document.getElementById('raportPreview');
 
     if (!id) {
-        setHtml('raportPreview', '<p>Selecteaza o firma pentru raportul complet.</p>');
+        setHtml('raportPreview', '<p class="empty-state">Nicio firma selectata</p>');
         return;
     }
 
@@ -1682,7 +1682,7 @@ function renderRaportCompletFirma(raport) {
                 <div class="kpi"><strong>${esc(firma.denumire_firma || '-')}</strong><span>Denumire</span></div>
                 <div class="kpi"><strong>${esc(firma.cui || '-')}</strong><span>CUI</span></div>
                 <div class="kpi"><strong>${esc(firma.cod_caen || '-')}</strong><span>Cod CAEN</span></div>
-                <div class="kpi kpi-imm"><strong>${esc(categorieImm)}</strong><span>Clasificare IMM</span></div>
+                <div class="kpi kpi-imm"><strong>${esc(categorieImm)}</strong><span>Categorie firma</span></div>
             </div>
         </article>
 
@@ -1725,7 +1725,7 @@ function renderRaportCompletFirma(raport) {
 }
 
 function raportTable(rows, coloane) {
-    if (!rows || !rows.length) return '<p>Nu exista date disponibile.</p>';
+    if (!rows || !rows.length) return '<p class="empty-state">Nu sunt disponibile date</p>';
 
     return `
         <div class="table-wrap report-table">
@@ -1749,13 +1749,13 @@ function actualizeazaRaport() {
     if (!el) return;
 
     if (!state.raport.length) {
-        el.innerHTML = '<p>Nu exista rezultate in raport. Pentru forma finala, selecteaza o firma si foloseste butonul Raport complet firma.</p>';
+        el.innerHTML = '<p class="empty-state">Niciun raport generat</p>';
         return;
     }
 
     el.innerHTML = `
         <article>
-            <h3>Raport financiar IMM</h3>
+            <h3>Raport financiar firma</h3>
             <p>Raport generat din ultimele analize rulate in aplicatie. Include sectiuni de diagnostic, comparatie, previziune si sinteze de piata, in functie de datele incarcate.</p>
         </article>
         ${state.raport.map(section => raportSection(section)).join('')}
@@ -1822,7 +1822,7 @@ function exportCsv() {
     const link = document.createElement('a');
 
     link.href = URL.createObjectURL(blob);
-    link.download = 'raport_imm.csv';
+    link.download = 'raport_firma.csv';
     link.click();
 }
 

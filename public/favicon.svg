@@ -1,0 +1,5 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect x="3" y="5" width="94" height="90" rx="14" fill="#244f9f" stroke="#a9c6ee" stroke-width="3"/>
+  <path d="M5 64 Q5 80 20 80 H80 Q95 80 95 64 V81 Q95 95 80 95 H20 Q5 95 5 81 Z" fill="#1b3f80" opacity="0.72"/>
+  <text x="50" y="62" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="31" font-weight="900" fill="#ffffff" letter-spacing="-1">IMM</text>
+</svg>
